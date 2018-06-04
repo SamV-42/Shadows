@@ -1,7 +1,12 @@
 #include "Camera.h"	//also has the other headers -- prob not good form
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/projection.hpp>
+//#define GLM_ENABLE_EXPERIMENTAL
+//#include <glm/gtx/projection.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+glm::vec3 proj(glm::vec3 thing, glm::vec3 normal) {
+    return thing * (GLfloat)( glm::dot(normal, thing) / glm::dot(normal, normal) );
+}
+
 
 void Camera::updateFront() {
 	glm::vec3 front;
@@ -22,11 +27,11 @@ Camera::Camera(glm::vec3 cameraPos_, glm::vec3 cameraFront_, glm::vec3 cameraUp_
 glm::vec3 Camera::getMove(CamDir dir, glm::vec3 groundNormal = glm::vec3(0.0f, 1.0f, 0.0f)) {
 	switch(dir) {
 		case LEFT: { glm::vec3 temp = glm::cross(cameraFront, cameraUp);
-			return glm::normalize(temp - glm::proj(temp, groundNormal)) * -cameraSpeed; };
+			return glm::normalize(temp - proj(temp, groundNormal)) * -cameraSpeed; };
 		case RIGHT: { glm::vec3 temp = glm::cross(cameraFront, cameraUp);
-			return glm::normalize(temp - glm::proj(temp, groundNormal)) * cameraSpeed; };
-		case FORE: return cameraSpeed * glm::normalize(cameraFront - glm::proj(cameraFront, groundNormal));
-		case BACK: return -cameraSpeed * glm::normalize(cameraFront - glm::proj(cameraFront, groundNormal));
+			return glm::normalize(temp - proj(temp, groundNormal)) * cameraSpeed; };
+		case FORE: return cameraSpeed * glm::normalize(cameraFront - proj(cameraFront, groundNormal));
+		case BACK: return -cameraSpeed * glm::normalize(cameraFront - proj(cameraFront, groundNormal));
 		case UP: return cameraSpeed * groundNormal;
 		case DOWN: return -cameraSpeed * groundNormal;
 	};

@@ -13,11 +13,11 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#define GLM_ENABLE_EXPERIMENTAL
+//#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/projection.hpp>
+//#include <glm/gtx/projection.hpp>
 
 #include "Shader.h"
 #include "Camera.h"
@@ -189,9 +189,18 @@ int main() {
 
 	initGL();
 
+	glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+
+    //glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+	model_shader = new Shader("vert_2.shader", "frag_2.shader");
+	//outline_shader = new Shader("vert_2", "frag_2_outliner");
+	light_shader = new Shader("light_vertex_shader.shader", "light_fragment_shader.shader");
+
 // ---------------------------------------------------------------------------------------------------------------------------------------------$$$
 
-const GLchar* vertexShaderSource = "#version 330 core\nlayout (location = 0) in vec3 position;\nlayout (location = 1) in vec2 TexCoords;\nout vec2 texCoords;\nvoid main()\n{\n\tgl_Position = vec4(position.x, position.y, position.z, 1.0);\ntexCoords = TexCoords;\n}";
+/*const GLchar* vertexShaderSource = "#version 330 core\nlayout (location = 0) in vec3 position;\nlayout (location = 1) in vec2 TexCoords;\nout vec2 texCoords;\nvoid main()\n{\n\tgl_Position = vec4(position.x, position.y, position.z, 1.0);\ntexCoords = TexCoords;\n}";
 //const GLchar* vertexShaderSource_2 = vertexShaderSource.c_str();
 GLuint vertexShader;
 vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -272,19 +281,10 @@ glUseProgram(shaderProgram);
 
 
 
-
+*/
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------$$$
-
-	glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-
-    //glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-
-	model_shader = new Shader("vert_2", "frag_2");
-	//outline_shader = new Shader("vert_2", "frag_2_outliner");
-	light_shader = new Shader("light_vertex_shader", "light_fragment_shader");
 
 	camera = new Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT);
 
@@ -349,6 +349,13 @@ glUseProgram(shaderProgram);
 		    glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
             soodle.Draw(light_shader);
         }
+        /*for(int i = 0; i < 4; ++i) {
+            for(int j = 0; j < 4; ++j) {
+                std::cout << camera->projection[j][i] << " ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;*/
 /*/$$$
 glUseProgram(shaderProgram);
         glActiveTexture(GL_TEXTURE15);   
