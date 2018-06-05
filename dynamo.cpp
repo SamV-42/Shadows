@@ -192,8 +192,9 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
-	model_shader = new Shader("vert_2.shader", "frag_2.shader");
-	light_shader = new Shader("light_vertex_shader.shader", "light_fragment_shader.shader");
+	model_shader = new Shader("main.vs", "main.fs");
+	outline_shader = new Shader("outliner.vs", "outliner.fs");
+	light_shader = new Shader("lighting.vs", "lighting.fs");
 
 	camera = new Camera(glm::vec3(0.0f, 0.0f, -2.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT);
 
@@ -212,22 +213,40 @@ int main() {
 		if(handleStuff()) break;
 
 		glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         model_shader->Use();
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_STENCIL_TEST);
+    glStencilMask(0xFF);
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 		glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
 		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
 		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
         glUniform1f(glGetUniformLocation(model_shader->getProgram(), "material0.shininess"), 64);
-
 		glm::mat4 podel = glm::mat4(1.0f);
         podel = glm::translate(podel, glm::vec3(0.0f));
-		podel = glm::scale(podel, glm::vec3(0.2f));
+		podel = glm::scale(podel, glm::vec3(0.05f));
 		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
-
         sendPointLights(model_shader);
-
         moodle.Draw(model_shader);
+
+    outline_shader->Use();
+    glDisable(GL_DEPTH_TEST);
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilMask(0x00);
+		glUniform3f(glGetUniformLocation(outline_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
+		glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+		glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+		//podel = glm::scale(podel, glm::vec3(1.2f));
+		glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
+        moodle.Draw(outline_shader);
+
+    glDisable(GL_STENCIL_TEST);
+    glEnable(GL_DEPTH_TEST);
+    glStencilMask(0xFF);    //didn't think I needed this... but glClear is affected by it geez
+/*
 
         light_shader->Use();
 
@@ -240,7 +259,7 @@ int main() {
 		    zodel = glm::scale(zodel, glm::vec3(0.0005f));
 		    glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
             soodle.Draw(light_shader);
-        }
+        }*/
 
 		glfwSwapBuffers(window);
 	}
