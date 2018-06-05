@@ -192,101 +192,10 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
-    //glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-
 	model_shader = new Shader("vert_2.shader", "frag_2.shader");
-	//outline_shader = new Shader("vert_2", "frag_2_outliner");
 	light_shader = new Shader("light_vertex_shader.shader", "light_fragment_shader.shader");
 
-// ---------------------------------------------------------------------------------------------------------------------------------------------$$$
-
-/*const GLchar* vertexShaderSource = "#version 330 core\nlayout (location = 0) in vec3 position;\nlayout (location = 1) in vec2 TexCoords;\nout vec2 texCoords;\nvoid main()\n{\n\tgl_Position = vec4(position.x, position.y, position.z, 1.0);\ntexCoords = TexCoords;\n}";
-//const GLchar* vertexShaderSource_2 = vertexShaderSource.c_str();
-GLuint vertexShader;
-vertexShader = glCreateShader(GL_VERTEX_SHADER);
-glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-glCompileShader(vertexShader);
-GLint success;
-GLchar infoLog[512];
-glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-if(!success) {
-    glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-    std::cout << "ERROR vertex shader compilation: " << infoLog <<std::endl;
-}
-
-const GLchar* fragmentShaderSource = "#version 330 core\nuniform sampler2D mat;\nin vec2 texCoords;\nout vec4 color;\nvoid main()\n{\ncolor = texture(mat, texCoords);\n}";
-GLuint fragmentShader;
-fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-glCompileShader(fragmentShader);
-GLint success2;
-glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success2);
-if(!success2) {
-    std::cout << "ERROR fragment shader compilation" << std::endl;
-}
-
-GLuint shaderProgram;
-shaderProgram = glCreateProgram();
-glAttachShader(shaderProgram, vertexShader);
-glAttachShader(shaderProgram, fragmentShader);
-glLinkProgram(shaderProgram);
-GLint success3;
-glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success3);
-if(!success3) {
-    std::cout << "ERROR linking" << std::endl;
-}
-glDeleteShader(vertexShader);
-glDeleteShader(fragmentShader);
-
-
-    GLfloat vertices[] = {
--0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-0.0f, 0.5f, 0.0f, 0.5f, 1.0f };
-
-    GLuint VBO;
-    glGenBuffers(1, &VBO);
-GLuint VAO;
-glGenVertexArrays(1, &VAO);
-
-glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(GLfloat), (GLvoid*)0);
-glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(GLfloat), (GLvoid*)(2*sizeof(GLfloat)) );
-glEnableVertexAttribArray(0);
-glEnableVertexAttribArray(1);
-glBindVertexArray(0);
-	GLuint text;
-	glGenTextures(1, &text);
-
-	glBindTexture(GL_TEXTURE_2D, text);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-glUseProgram(shaderProgram);
-	int width, height;
-    std::string location = "../project/box.png";    //yeah whatever
-	unsigned char* image = SOIL_load_image(location.c_str(), &width, &height, 0, SOIL_LOAD_RGB);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	SOIL_free_image_data(image);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-        glActiveTexture(GL_TEXTURE15);   
-        glBindTexture(GL_TEXTURE_2D, text);
-        glUniform1i(glGetUniformLocation(shaderProgram, "mat" ), 15);   //"material." + 
-
-
-
-*/
-
-
-// ---------------------------------------------------------------------------------------------------------------------------------------------$$$
-
-	camera = new Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT);
+	camera = new Camera(glm::vec3(0.0f, 0.0f, -2.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT);
 
     Model moodle = Model("nano/nanosuit.obj");
     Model soodle = Model("textures/hst.3ds");
@@ -310,32 +219,15 @@ glUseProgram(shaderProgram);
 		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
 		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
         glUniform1f(glGetUniformLocation(model_shader->getProgram(), "material0.shininess"), 64);
-        sendPointLights(model_shader);
-		glm::mat4 podel;
+
+		glm::mat4 podel = glm::mat4(1.0f);
         podel = glm::translate(podel, glm::vec3(0.0f));
 		podel = glm::scale(podel, glm::vec3(0.2f));
 		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
 
-        /*glEnable(GL_STENCIL_TEST); 
-        glClear(GL_STENCIL_BUFFER_BIT);
-        glStencilMask(0xFF);
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);*/
+        sendPointLights(model_shader);
 
         moodle.Draw(model_shader);
-
-/*        outline_shader->Use();
-        glDisable(GL_DEPTH_TEST);
-        glStencilMask(0x00);
-        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
-		glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
-        glUniform1f(glGetUniformLocation(outline_shader->getProgram(), "material0.shininess"), 64);
-		podel = glm::scale(podel, glm::vec3(1.05f));
-		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
-        moodle.Draw(outline_shader);
-        glEnable(GL_DEPTH_TEST);
-        glDisable(GL_STENCIL_TEST); */
-
 
         light_shader->Use();
 
@@ -343,28 +235,12 @@ glUseProgram(shaderProgram);
 		glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
 
         for(int i = 0; i < tmp_numPointLights; ++i) {
-		    glm::mat4 zodel;
+		    glm::mat4 zodel = glm::mat4(1.0f);
             zodel = glm::translate(zodel, tmp_pointLights[i]);
 		    zodel = glm::scale(zodel, glm::vec3(0.0005f));
 		    glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
             soodle.Draw(light_shader);
         }
-        /*for(int i = 0; i < 4; ++i) {
-            for(int j = 0; j < 4; ++j) {
-                std::cout << camera->projection[j][i] << " ";
-            }
-            std::cout << std::endl;
-        }
-        std::cout << std::endl;*/
-/*/$$$
-glUseProgram(shaderProgram);
-        glActiveTexture(GL_TEXTURE15);   
-        glBindTexture(GL_TEXTURE_2D, text);
-        glUniform1i(glGetUniformLocation(shaderProgram, "mat" ), 15);
-glBindVertexArray(VAO);
-glDrawArrays(GL_TRIANGLES, 0, 3);
-glBindVertexArray(0);
-//$$$*/
 
 		glfwSwapBuffers(window);
 	}

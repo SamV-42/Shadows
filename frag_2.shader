@@ -58,6 +58,6 @@ void main()
         output += point_Lighting(pointLights[i], norm, FragPos, viewDir);
     }
 
-    color = vec4(output, 1.0);
+    color = vec4(output, 1.0f);
 }
 
