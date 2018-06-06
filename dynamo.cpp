@@ -27,6 +27,8 @@
 const GLuint WIDTH = 1200;
 const GLuint HEIGHT = 800;
 
+Mesh* mesh; //dont even care anymore
+
 GLFWwindow* window;
 Shader* model_shader;
 Shader* light_shader;
@@ -80,6 +82,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 }
 
 /* Input Handling -------------------------------------------------------------------*/
+
 bool handleStuff() {
 	glm::vec3 temp;
 	glm::vec3 temp_2;
@@ -126,6 +129,7 @@ bool handleStuff() {
 				camera->cameraPos += camera->getMove(UP, groundNormal);
 			}
 		}
+
 		//camera->cameraFront = glm::normalize(movingStuff.back().position - camera->cameraPos);
 		camera->updateView();
 		return false;
@@ -192,14 +196,31 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
-	model_shader = new Shader("main.vs", "main.fs");
-	outline_shader = new Shader("outliner.vs", "outliner.fs");
-	light_shader = new Shader("lighting.vs", "lighting.fs");
+	model_shader = new Shader("shaders/main.vs", "shaders/main.fs");
+	outline_shader = new Shader("shaders/outliner.vs", "shaders/outliner.fs");
+	light_shader = new Shader("shaders/lighting.vs", "shaders/lighting.fs");
 
-	camera = new Camera(glm::vec3(0.0f, 0.0f, -2.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT);
+	camera = new Camera(glm::vec3(0.0f, 0.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT);
 
-    Model moodle = Model("nano/nanosuit.obj");
-    Model soodle = Model("textures/hst.3ds");
+        std::vector<Vertex> lertices; 
+        {
+        Vertex v1; v1.Position = glm::vec3(0.0f, 0.0f, 0.0f); v1.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v1.TexCoords = glm::vec2(0.0f, 0.0f); 
+        Vertex v2; v2.Position = glm::vec3(1.0f, 0.0f, 0.0f); v2.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v2.TexCoords = glm::vec2(1.0f, 0.0f); 
+        Vertex v3; v3.Position = glm::vec3(0.0f, 1.0f, 0.0f); v3.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v3.TexCoords = glm::vec2(0.0f, 1.0f); 
+        Vertex v4; v4.Position = glm::vec3(1.0f, 1.0f, 0.0f); v4.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v4.TexCoords = glm::vec2(1.0f, 1.0f); 
+        lertices.push_back(v1); lertices.push_back(v2); lertices.push_back(v3); lertices.push_back(v4);
+        }
+        std::vector<GLuint> indices; std::vector<Texture> textures;
+
+        indices.push_back(0); indices.push_back(2); indices.push_back(1); indices.push_back(1); indices.push_back(2); indices.push_back(3);
+        GLuint text = TextureFromFile("window.png","assets");
+        Texture texty; texty.id = text; texty.type = "texture_diffuse"; texty.path="assets/window.png";
+        textures.push_back(texty);
+        mesh = new Mesh(lertices, indices, textures);
+
+
+    Model moodle = Model("assets/nano/nanosuit.obj");
+    Model soodle = Model("assets/textures/hst.3ds");
 
 	double timer = glfwGetTime();
 	double changeTime = 0;
@@ -246,7 +267,7 @@ int main() {
     glDisable(GL_STENCIL_TEST);
     glEnable(GL_DEPTH_TEST);
     glStencilMask(0xFF);    //didn't think I needed this... but glClear is affected by it geez
-/*
+
 
         light_shader->Use();
 
@@ -256,10 +277,28 @@ int main() {
         for(int i = 0; i < tmp_numPointLights; ++i) {
 		    glm::mat4 zodel = glm::mat4(1.0f);
             zodel = glm::translate(zodel, tmp_pointLights[i]);
-		    zodel = glm::scale(zodel, glm::vec3(0.0005f));
+		    zodel = glm::scale(zodel, glm::vec3(0.0002f));
 		    glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
             soodle.Draw(light_shader);
-        }*/
+        }
+
+
+        light_shader->Use();
+        //glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
+		glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+		glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+        //glUniform1f(glGetUniformLocation(model_shader->getProgram(), "material0.shininess"), 64);
+    	glm::mat4 zodel = glm::mat4(1.0f);
+        glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
+
+        glm::vec4 breaker = camera->projection * camera->view * zodel * glm::vec4(mesh->vertices[0].Position, 1.0f);
+        if(timer > 3) {
+
+            //std::cout << "hey" << std::endl;
+
+        }
+
+        mesh->Draw(light_shader);
 
 		glfwSwapBuffers(window);
 	}

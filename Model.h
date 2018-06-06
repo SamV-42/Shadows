@@ -1,3 +1,6 @@
+#ifndef MODEL_H
+#define MODEL_H
+
 #include "Mesh.h"
 
 #include <cstring>
@@ -19,3 +22,4 @@ private:
 };
 
 GLuint TextureFromFile(std::string name, std::string directory);
+#endif

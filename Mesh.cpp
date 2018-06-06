@@ -48,3 +48,11 @@ void Mesh::Draw(Shader* shader) {
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);   
 }
+
+void Mesh::testing_updateVertices() {
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*vertices.size(), &vertices[0], GL_STATIC_DRAW);
+    //std::cout << vertices[0].Position[0] << " " << vertices[0].Position[1] << " " << vertices[0].Position[2] << std::endl;
+    glBindVertexArray(0);
+}

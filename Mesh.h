@@ -1,3 +1,6 @@
+#ifndef MESH_H
+#define MESH_H
+
 #include <string>
 #include <vector>
 
@@ -30,9 +33,11 @@ public:
     Mesh(std::vector<Vertex> vertices_, std::vector<GLuint> indices_, std::vector<Texture> textures_);
 
     void Draw(Shader* shader);
+    void testing_updateVertices();
 
-private:
+//private:
     GLuint VAO;
     GLuint VBO;
     GLuint EBO;
 };
+#endif
