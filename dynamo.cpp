@@ -27,7 +27,8 @@
 const GLuint WIDTH = 1200;
 const GLuint HEIGHT = 800;
 
-Mesh* mesh; //dont even care anymore
+glm::vec3 position = glm::vec3(0.0f, -1.25f, 0.0f);
+GLfloat direction = glm::radians(0.0f);
 
 GLFWwindow* window;
 Shader* model_shader;
@@ -36,12 +37,12 @@ Shader* outline_shader;
 
 Camera* camera;
 
-const static int tmp_numPointLights = 1;
+const static int tmp_numPointLights = 4;
 static glm::vec3 tmp_pointLights[] = {
-		glm::vec3(  0, 0, 0  )/*,
-		glm::vec3(  10, 7, 2  ),
-		glm::vec3(  4, 3, -6  ),
-		glm::vec3(  0, -2, 8  )//*/
+		glm::vec3(  5, 0, 7  ),
+		glm::vec3(  2, 0, 3  ),
+		glm::vec3(  4, 0, -6  ),
+		glm::vec3(  0, 0, 8  )//*/
 	};
 
 /* Input Stuff ---------------------------------- */
@@ -57,7 +58,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		keys[key] = false;
 	}
 }
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+/*void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 	if(mouseIn) {
 		lastX = xpos;
 		lastY = ypos;
@@ -79,58 +80,27 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 	else if(camera->pitch < camera->MIN_PITCH) camera->pitch = camera->MIN_PITCH;
 
 	camera->updateFront();
-}
+}*/
 
 /* Input Handling -------------------------------------------------------------------*/
 
 bool handleStuff() {
-	glm::vec3 temp;
-	glm::vec3 temp_2;
 	glm::vec3 groundNormal = glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f));
 		if(keys[GLFW_KEY_ESCAPE]) {
 			return true;
 		}
 
-		switch(keys[GLFW_KEY_U] - keys[GLFW_KEY_J]) {
-			case 1:
-				tmp_pointLights[0] += camera->getMove(FORE, groundNormal); break;
-			case -1:
-				tmp_pointLights[0] += camera->getMove(BACK, groundNormal); break;
-		}
-		switch(keys[GLFW_KEY_H] - keys[GLFW_KEY_K]) {
-			case 1:
-				tmp_pointLights[0] += camera->getMove(LEFT, groundNormal); break;
-			case -1:
-				tmp_pointLights[0] += camera->getMove(RIGHT, groundNormal); break;
-		}
-		switch(keys[GLFW_KEY_L] - keys[GLFW_KEY_O]) {
-			case 1:
-				tmp_pointLights[0] += camera->getMove(DOWN, groundNormal); break;
-			case -1:
-				tmp_pointLights[0] += camera->getMove(UP, groundNormal); break;
-		}
+        //glm::vec3 direction = position - camera->cameraPos;
+        //position += ( (GLfloat)(keys[GLFW_KEY_W] - keys[GLFW_KEY_S])*( 0.075f * glm::normalize(glm::vec3(direction.x, 0, direction.z)) ) )  +  ( (GLfloat)(keys[GLFW_KEY_D] - keys[GLFW_KEY_A])*( 0.075f*glm::normalize(glm::cross(glm::vec3(camera->cameraFront.x, 0.0f, camera->cameraFront.z), groundNormal)) ) );
+        direction += glm::radians(180*(GLfloat)(keys[GLFW_KEY_A] - keys[GLFW_KEY_D]));
 
-		switch(keys[GLFW_KEY_W] - keys[GLFW_KEY_S]) {
-			case 1:
-				camera->cameraPos += camera->getMove(FORE, groundNormal); break;
-			case -1:
-				camera->cameraPos += camera->getMove(BACK, groundNormal); break;
-		}
-		switch(keys[GLFW_KEY_A] - keys[GLFW_KEY_D]) {
-			case 1:
-				camera->cameraPos += camera->getMove(LEFT, groundNormal); break;
-			case -1:
-				camera->cameraPos += camera->getMove(RIGHT, groundNormal); break;
-		}
-		if(keys[GLFW_KEY_SPACE]) {
-			if(keys[GLFW_KEY_LEFT_SHIFT] or keys[GLFW_KEY_RIGHT_SHIFT]) {
-				camera->cameraPos += camera->getMove(DOWN, groundNormal);
-			} else {
-				camera->cameraPos += camera->getMove(UP, groundNormal);
-			}
-		}
+        //std::cout << direction << std::endl;
 
-		//camera->cameraFront = glm::normalize(movingStuff.back().position - camera->cameraPos);
+        GLfloat scale_fact = 0.075f*(GLfloat)(keys[GLFW_KEY_W] - keys[GLFW_KEY_S]);
+        glm::vec4 change = glm::rotate(glm::mat4(1.0f), glm::radians(direction), glm::vec3(0.0f, 1.0f, 0.0f))*glm::vec4(0.0f, 0.0f, scale_fact, 1.0f);
+        position.x += change.x; position.z += change.z;
+
+		camera->cameraFront = glm::normalize(position - camera->cameraPos);
 		camera->updateView();
 		return false;
 }
@@ -158,22 +128,22 @@ void initGL() {
 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetKeyCallback(window, key_callback);
-	glfwSetCursorPosCallback(window, mouse_callback);
+	//glfwSetCursorPosCallback(window, mouse_callback);
 }
 
 // Display functions -------------------------------------------------------------------------------- 
-void sendPointLights(Shader* default_shader) {
+void sendPointLights(Shader* default_shader, GLfloat atn_c = 1.0f, GLfloat atn_l = 0.05f, GLfloat atn_q = 0.001f) {
 	std::string tempPlace = "pointLights[X].";
 	for(int i = 0; i < tmp_numPointLights; ++i) {	//int i = 0; i < light.translations.size(); ++i
 		tempPlace[12] = (char)('0' + i);
 		GLint lightPosLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "position").c_str() );
 		glUniform3f(lightPosLoc, tmp_pointLights[i].x, tmp_pointLights[i].y, tmp_pointLights[i].z);
 		GLint lightConstantLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "constant").c_str() );
-		glUniform1f(lightConstantLoc, 1.0f);
+		glUniform1f(lightConstantLoc, atn_c);
 		GLint lightLinearLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "linear").c_str() );
-		glUniform1f(lightLinearLoc, 0.05f);
+		glUniform1f(lightLinearLoc, atn_l);
 		GLint lightQuadraticLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "quadratic").c_str() );
-		glUniform1f(lightQuadraticLoc, 0.01f);
+		glUniform1f(lightQuadraticLoc, atn_q);
 
     glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
 	GLint lightAmbientLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "ambient").c_str() );
@@ -200,8 +170,10 @@ int main() {
 	outline_shader = new Shader("shaders/outliner.vs", "shaders/outliner.fs");
 	light_shader = new Shader("shaders/lighting.vs", "shaders/lighting.fs");
 
-	camera = new Camera(glm::vec3(0.0f, 0.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT);
+	camera = new Camera(glm::vec3(0.0f, 2.8f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT);
 
+    Mesh* mesh;
+    {
         std::vector<Vertex> lertices; 
         {
         Vertex v1; v1.Position = glm::vec3(0.0f, 0.0f, 0.0f); v1.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v1.TexCoords = glm::vec2(0.0f, 0.0f); 
@@ -213,10 +185,15 @@ int main() {
         std::vector<GLuint> indices; std::vector<Texture> textures;
 
         indices.push_back(0); indices.push_back(2); indices.push_back(1); indices.push_back(1); indices.push_back(2); indices.push_back(3);
+        indices.push_back(0); indices.push_back(1); indices.push_back(2); indices.push_back(1); indices.push_back(3); indices.push_back(2);
         GLuint text = TextureFromFile("window.png","assets");
+        GLuint text2 = TextureFromFile("window_specular.png","assets");
         Texture texty; texty.id = text; texty.type = "texture_diffuse"; texty.path="assets/window.png";
+        Texture texty2; texty2.id = text; texty2.type = "texture_specular"; texty2.path="assets/window_specular.png";
         textures.push_back(texty);
+        textures.push_back(texty2);
         mesh = new Mesh(lertices, indices, textures);
+    }
 
 
     Model moodle = Model("assets/nano/nanosuit.obj");
@@ -224,6 +201,8 @@ int main() {
 
 	double timer = glfwGetTime();
 	double changeTime = 0;
+
+    glEnable(GL_DEPTH_TEST);
 
 	while(!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -237,36 +216,18 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         model_shader->Use();
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_STENCIL_TEST);
-    glStencilMask(0xFF);
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
 		glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
 		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
 		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
         glUniform1f(glGetUniformLocation(model_shader->getProgram(), "material0.shininess"), 64);
 		glm::mat4 podel = glm::mat4(1.0f);
-        podel = glm::translate(podel, glm::vec3(0.0f));
-		podel = glm::scale(podel, glm::vec3(0.05f));
+        podel = glm::translate(podel, position);
+		podel = glm::scale(podel, glm::vec3(0.12f));
+        podel = glm::rotate(podel, glm::radians(direction), glm::vec3(0.0f, 1.0f, 0.0f));
 		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
-        sendPointLights(model_shader);
+        sendPointLights(model_shader, 1.0f, 0.02, 0.003);
         moodle.Draw(model_shader);
-
-    outline_shader->Use();
-    glDisable(GL_DEPTH_TEST);
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-    glStencilMask(0x00);
-		glUniform3f(glGetUniformLocation(outline_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
-		glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
-		glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
-		//podel = glm::scale(podel, glm::vec3(1.2f));
-		glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
-        moodle.Draw(outline_shader);
-
-    glDisable(GL_STENCIL_TEST);
-    glEnable(GL_DEPTH_TEST);
-    glStencilMask(0xFF);    //didn't think I needed this... but glClear is affected by it geez
 
 
         light_shader->Use();
@@ -277,28 +238,25 @@ int main() {
         for(int i = 0; i < tmp_numPointLights; ++i) {
 		    glm::mat4 zodel = glm::mat4(1.0f);
             zodel = glm::translate(zodel, tmp_pointLights[i]);
-		    zodel = glm::scale(zodel, glm::vec3(0.0002f));
+		    zodel = glm::scale(zodel, glm::vec3(0.0005f, 0.004, 0.0005f));
 		    glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
             soodle.Draw(light_shader);
         }
 
 
-        light_shader->Use();
-        //glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
-		glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
-		glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
-        //glUniform1f(glGetUniformLocation(model_shader->getProgram(), "material0.shininess"), 64);
+        model_shader->Use();
+        glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
+		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+        glUniform1f(glGetUniformLocation(model_shader->getProgram(), "material0.shininess"), 64);
+        sendPointLights(model_shader, 1.0f, 1.0f, 0.002f);
     	glm::mat4 zodel = glm::mat4(1.0f);
-        glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
+        zodel = glm::translate(zodel, glm::vec3(-5.0f, -1.25f, 0.0f));
+        zodel = glm::rotate(zodel, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        zodel = glm::scale(zodel, glm::vec3(12.0f));
+        glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
 
-        glm::vec4 breaker = camera->projection * camera->view * zodel * glm::vec4(mesh->vertices[0].Position, 1.0f);
-        if(timer > 3) {
-
-            //std::cout << "hey" << std::endl;
-
-        }
-
-        mesh->Draw(light_shader);
+        mesh->Draw(model_shader);
 
 		glfwSwapBuffers(window);
 	}

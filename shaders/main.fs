@@ -9,7 +9,7 @@ struct PointLight {
 	float linear;
 	float quadratic;
 };
-#define NR_POINT_LIGHTS 1
+#define NR_POINT_LIGHTS 4
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 
 struct Material {
