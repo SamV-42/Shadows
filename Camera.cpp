@@ -22,6 +22,8 @@ Camera::Camera(glm::vec3 cameraPos_, glm::vec3 cameraFront_, glm::vec3 cameraUp_
 	cameraUp = cameraUp_;
 
 	projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
+	updateFront();
+    updateView();
 }
 
 glm::vec3 Camera::getMove(CamDir dir, glm::vec3 groundNormal = glm::vec3(0.0f, 1.0f, 0.0f)) {
@@ -41,3 +43,5 @@ glm::vec3 Camera::getMove(CamDir dir, glm::vec3 groundNormal = glm::vec3(0.0f, 1
 void Camera::updateView() {
 	view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 }
+
+
