@@ -117,7 +117,7 @@ void initGL() {
 	window = glfwCreateWindow(WIDTH, HEIGHT, "Hello World", NULL, NULL);
 	if(!window) { std::cout << "Create Window error!" << std::endl; throw 2; }
 	glfwMakeContextCurrent(window);
-	
+
 	glewExperimental = GL_TRUE;	//apparently needs current window before init
 	GLenum err = glewInit();
 	if(err) { std::cout << "GLEW Init Error!: " << glewGetErrorString(err) << std::endl; throw 3; }
@@ -131,7 +131,7 @@ void initGL() {
 	//glfwSetCursorPosCallback(window, mouse_callback);
 }
 
-// Display functions -------------------------------------------------------------------------------- 
+// Display functions --------------------------------------------------------------------------------
 void sendPointLights(Shader* default_shader, GLfloat atn_c = 1.0f, GLfloat atn_l = 0.05f, GLfloat atn_q = 0.001f) {
 	std::string tempPlace = "pointLights[X].";
 	for(int i = 0; i < tmp_numPointLights; ++i) {	//int i = 0; i < light.translations.size(); ++i
@@ -174,12 +174,12 @@ int main() {
 
     Mesh* mesh;
     {
-        std::vector<Vertex> lertices; 
+        std::vector<Vertex> lertices;
         {
-        Vertex v1; v1.Position = glm::vec3(0.0f, 0.0f, 0.0f); v1.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v1.TexCoords = glm::vec2(0.0f, 0.0f); 
-        Vertex v2; v2.Position = glm::vec3(1.0f, 0.0f, 0.0f); v2.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v2.TexCoords = glm::vec2(1.0f, 0.0f); 
-        Vertex v3; v3.Position = glm::vec3(0.0f, 1.0f, 0.0f); v3.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v3.TexCoords = glm::vec2(0.0f, 1.0f); 
-        Vertex v4; v4.Position = glm::vec3(1.0f, 1.0f, 0.0f); v4.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v4.TexCoords = glm::vec2(1.0f, 1.0f); 
+        Vertex v1; v1.Position = glm::vec3(0.0f, 0.0f, 0.0f); v1.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v1.TexCoords = glm::vec2(0.0f, 0.0f);
+        Vertex v2; v2.Position = glm::vec3(1.0f, 0.0f, 0.0f); v2.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v2.TexCoords = glm::vec2(1.0f, 0.0f);
+        Vertex v3; v3.Position = glm::vec3(0.0f, 1.0f, 0.0f); v3.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v3.TexCoords = glm::vec2(0.0f, 1.0f);
+        Vertex v4; v4.Position = glm::vec3(1.0f, 1.0f, 0.0f); v4.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v4.TexCoords = glm::vec2(1.0f, 1.0f);
         lertices.push_back(v1); lertices.push_back(v2); lertices.push_back(v3); lertices.push_back(v4);
         }
         std::vector<GLuint> indices; std::vector<Texture> textures;
@@ -195,6 +195,96 @@ int main() {
         mesh = new Mesh(lertices, indices, textures);
     }
 
+		GLuint cubetexture;
+
+			glGenTextures(1, &cubetexture);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, cubetexture);
+			int a_width, a_height;
+			unsigned char* a_image;
+			std::vector<std::string> textures_faces;
+			textures_faces.push_back("assets/cube1/right.jpg");
+			textures_faces.push_back("assets/cube1/left.jpg");
+			textures_faces.push_back("assets/cube1/top.jpg");
+			textures_faces.push_back("assets/cube1/bottom.jpg");
+			textures_faces.push_back("assets/cube1/back.jpg");
+			textures_faces.push_back("assets/cube1/front.jpg");
+
+			for(GLuint i = 0; i < textures_faces.size(); ++i) {
+				a_image = SOIL_load_image(textures_faces[i].c_str(), &a_width, &a_height, 0, SOIL_LOAD_RGB);
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, a_width, a_height, 0, GL_RGB, GL_UNSIGNED_BYTE, a_image);
+			}
+
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+			SOIL_free_image_data(a_image);
+
+			GLfloat skyboxVertices[] = {
+					// positions
+					-1.0f,  1.0f, -1.0f,
+					-1.0f, -1.0f, -1.0f,
+					 1.0f, -1.0f, -1.0f,
+					 1.0f, -1.0f, -1.0f,
+					 1.0f,  1.0f, -1.0f,
+					-1.0f,  1.0f, -1.0f,
+
+					-1.0f, -1.0f,  1.0f,
+					-1.0f, -1.0f, -1.0f,
+					-1.0f,  1.0f, -1.0f,
+					-1.0f,  1.0f, -1.0f,
+					-1.0f,  1.0f,  1.0f,
+					-1.0f, -1.0f,  1.0f,
+
+					 1.0f, -1.0f, -1.0f,
+					 1.0f, -1.0f,  1.0f,
+					 1.0f,  1.0f,  1.0f,
+					 1.0f,  1.0f,  1.0f,
+					 1.0f,  1.0f, -1.0f,
+					 1.0f, -1.0f, -1.0f,
+
+					-1.0f, -1.0f,  1.0f,
+					-1.0f,  1.0f,  1.0f,
+					 1.0f,  1.0f,  1.0f,
+					 1.0f,  1.0f,  1.0f,
+					 1.0f, -1.0f,  1.0f,
+					-1.0f, -1.0f,  1.0f,
+
+					-1.0f,  1.0f, -1.0f,
+					 1.0f,  1.0f, -1.0f,
+					 1.0f,  1.0f,  1.0f,
+					 1.0f,  1.0f,  1.0f,
+					-1.0f,  1.0f,  1.0f,
+					-1.0f,  1.0f, -1.0f,
+
+					-1.0f, -1.0f, -1.0f,
+					-1.0f, -1.0f,  1.0f,
+					 1.0f, -1.0f, -1.0f,
+					 1.0f, -1.0f, -1.0f,
+					-1.0f, -1.0f,  1.0f,
+					 1.0f, -1.0f,  1.0f
+			};
+
+			GLuint cube_vao;
+			glGenVertexArrays(1, &cube_vao);
+			GLuint cube_vbo;
+			glGenBuffers(1, &cube_vbo);
+
+			glBindVertexArray(cube_vao);
+			glBindBuffer(GL_ARRAY_BUFFER, cube_vbo);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0 );
+			glEnableVertexAttribArray(0);
+
+			glBindVertexArray(0);
+
+
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+		Shader cube_shader = Shader("shaders/cubeshad.vs", "shaders/cubeshad.fs");
 
     Model moodle = Model("assets/nano/nanosuit.obj");
     Model soodle = Model("assets/textures/hst.3ds");
@@ -214,6 +304,21 @@ int main() {
 
 		glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+
+		glDepthMask(GL_FALSE);
+		cube_shader.Use();
+		glm::mat4 temp_c_view = glm::mat4(glm::mat3(camera->view));
+		glUniformMatrix4fv(glGetUniformLocation(cube_shader.getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(temp_c_view));
+		glUniformMatrix4fv(glGetUniformLocation(cube_shader.getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+
+		glBindVertexArray(cube_vao);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubetexture);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
+		glDepthMask(GL_TRUE);
+
+
 
         model_shader->Use();
 
