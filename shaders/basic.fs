@@ -8,16 +8,11 @@ uniform vec3 cameraPos;
 uniform samplerCube skybox;
 
 void main() {
-/*//  if(gl_FrontFacing) {
+//  if(gl_FrontFacing) {
     vec3 I = normalize(Position - cameraPos);
     vec3 R = reflect(I, normalize(Normal));
     color = vec4(texture(skybox, R).rgb, 1.0);
 //  } else {
   //  color = vec4(0.8f, 0.6f, 0.3f, 1.0f);
-//  }*/
-  float ratio = 1.0 / 1.33;
-  vec3 I = normalize(Position - cameraPos);
-  vec3 R = refract(I, normalize(Normal), ratio);
-  color = texture(skybox, R);
-
+//  }
 }
