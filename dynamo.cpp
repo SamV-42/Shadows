@@ -465,19 +465,28 @@ int main() {
 		glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        model_shader->Use();
+        basic_shader->Use();
 
-		glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
-		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
-		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
-        glUniform1f(glGetUniformLocation(model_shader->getProgram(), "material0.shininess"), 64);
+		glUniform3f(glGetUniformLocation(basic_shader->getProgram(), "cameraPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
+		glUniformMatrix4fv(glGetUniformLocation(basic_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+		glUniformMatrix4fv(glGetUniformLocation(basic_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+//        glUniform1f(glGetUniformLocation(model_shader->getProgram(), "material0.shininess"), 64);
 		glm::mat4 podel = glm::mat4(1.0f);
         podel = glm::translate(podel, position);
-		podel = glm::scale(podel, glm::vec3(0.12f));
+		podel = glm::scale(podel, glm::vec3(0.5f));
         podel = glm::rotate(podel, glm::radians(direction), glm::vec3(0.0f, 1.0f, 0.0f));
-		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
-        sendPointLights(model_shader, 1.0f, 0.02, 0.003);
-        moodle.Draw(model_shader);
+		glUniformMatrix4fv(glGetUniformLocation(basic_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
+//        sendPointLights(model_shader, 1.0f, 0.02, 0.003);
+
+glBindTexture(GL_TEXTURE_CUBE_MAP, cubetexture);
+for(auto mesh : moodle.mMeshes) {
+	glBindVertexArray(mesh.VAO);
+	glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+}
+
+
+        //moodle.Draw(model_shader);
 
 
         light_shader->Use();
