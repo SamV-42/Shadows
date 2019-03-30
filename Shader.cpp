@@ -9,7 +9,6 @@
 #include "Shader.h"
 
 Shader::Shader(std::string vertex_path, std::string fragment_path) {
-
 	const GLchar* vertexShaderSource;
 	const GLchar* fragmentShaderSource;
 
@@ -36,14 +35,12 @@ Shader::Shader(std::string vertex_path, std::string fragment_path) {
 	} catch(std::ifstream::failure e) {
 		std::cout << "ERROR::SHADER::VERTEX::FILE NOT READ" << std::endl;
 	}
-
 	GLchar infoLog[512];
 	GLint success;
 
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
 	glCompileShader(vertexShader);
-
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
 	if(!success) {
 		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);

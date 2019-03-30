@@ -34,6 +34,8 @@ GLFWwindow* window;
 Shader* model_shader;
 Shader* light_shader;
 Shader* outline_shader;
+Shader* basic_shader;
+
 
 Camera* camera;
 
@@ -46,6 +48,11 @@ static glm::vec3 tmp_pointLights[] = {
 	};
 
 /* Input Stuff ---------------------------------- */
+
+GLfloat syoot_angle = 0.0f;
+GLfloat syoot_angle2 = 0.0f;
+GLfloat syoot_angle3 = 0.0f;
+
 
 GLfloat lastX = 400.0f;
 GLfloat lastY = 300.0f;
@@ -89,6 +96,16 @@ bool handleStuff() {
 		if(keys[GLFW_KEY_ESCAPE]) {
 			return true;
 		}
+
+		if(keys[GLFW_KEY_R]) {
+			syoot_angle += 0.5f;
+		}
+		if(keys[GLFW_KEY_T]) {
+			syoot_angle2 += 0.5f;
+		}
+		if(keys[GLFW_KEY_Y]) {
+					syoot_angle3 += 0.5f;
+				}
 
         //glm::vec3 direction = position - camera->cameraPos;
         //position += ( (GLfloat)(keys[GLFW_KEY_W] - keys[GLFW_KEY_S])*( 0.075f * glm::normalize(glm::vec3(direction.x, 0, direction.z)) ) )  +  ( (GLfloat)(keys[GLFW_KEY_D] - keys[GLFW_KEY_A])*( 0.075f*glm::normalize(glm::cross(glm::vec3(camera->cameraFront.x, 0.0f, camera->cameraFront.z), groundNormal)) ) );
@@ -164,11 +181,12 @@ int main() {
 	initGL();
 
 	glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+  glEnable(GL_CULL_FACE);
 
 	model_shader = new Shader("shaders/main.vs", "shaders/main.fs");
 	outline_shader = new Shader("shaders/outliner.vs", "shaders/outliner.fs");
 	light_shader = new Shader("shaders/lighting.vs", "shaders/lighting.fs");
+	basic_shader = new Shader("shaders/basic.vs", "shaders/basic.fs");
 
 	camera = new Camera(glm::vec3(0.0f, 2.8f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT);
 
@@ -225,47 +243,166 @@ int main() {
 
 			GLfloat skyboxVertices[] = {
 					// positions
-					-1.0f,  1.0f, -1.0f,
-					-1.0f, -1.0f, -1.0f,
-					 1.0f, -1.0f, -1.0f,
-					 1.0f, -1.0f, -1.0f,
-					 1.0f,  1.0f, -1.0f,
-					-1.0f,  1.0f, -1.0f,
+					-1.0f,  1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+					-1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+					 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
 
-					-1.0f, -1.0f,  1.0f,
-					-1.0f, -1.0f, -1.0f,
-					-1.0f,  1.0f, -1.0f,
-					-1.0f,  1.0f, -1.0f,
-					-1.0f,  1.0f,  1.0f,
-					-1.0f, -1.0f,  1.0f,
+					 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+					 1.0f,  1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+					 -1.0f,  1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
 
-					 1.0f, -1.0f, -1.0f,
-					 1.0f, -1.0f,  1.0f,
-					 1.0f,  1.0f,  1.0f,
-					 1.0f,  1.0f,  1.0f,
-					 1.0f,  1.0f, -1.0f,
-					 1.0f, -1.0f, -1.0f,
 
-					-1.0f, -1.0f,  1.0f,
-					-1.0f,  1.0f,  1.0f,
-					 1.0f,  1.0f,  1.0f,
-					 1.0f,  1.0f,  1.0f,
-					 1.0f, -1.0f,  1.0f,
-					-1.0f, -1.0f,  1.0f,
+					-1.0f, -1.0f,  1.0f, -1.0f, 0.0f, 0.0f,
+					-1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f,
+					-1.0f,  1.0f, -1.0f, -1.0f, 0.0f, 0.0f,
 
-					-1.0f,  1.0f, -1.0f,
-					 1.0f,  1.0f, -1.0f,
-					 1.0f,  1.0f,  1.0f,
-					 1.0f,  1.0f,  1.0f,
-					-1.0f,  1.0f,  1.0f,
-					-1.0f,  1.0f, -1.0f,
+					-1.0f,  1.0f, -1.0f, -1.0f, 0.0f, 0.0f,
+					-1.0f,  1.0f,  1.0f, -1.0f, 0.0f, 0.0f,
+					-1.0f, -1.0f,  1.0f, -1.0f, 0.0f, 0.0f,
 
-					-1.0f, -1.0f, -1.0f,
-					-1.0f, -1.0f,  1.0f,
-					 1.0f, -1.0f, -1.0f,
-					 1.0f, -1.0f, -1.0f,
-					-1.0f, -1.0f,  1.0f,
-					 1.0f, -1.0f,  1.0f
+
+					 1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f,
+					 1.0f, -1.0f,  1.0f, 1.0f, 0.0f, 0.0f,
+					 1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 0.0f,
+
+					 1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 0.0f,
+					 1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 0.0f,
+					 1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f,
+
+
+					-1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+					 -1.0f,  1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+					 1.0f,  1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+
+					 1.0f,  1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+					1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+					-1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+
+
+					-1.0f,  1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+					 1.0f,  1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+					 1.0f,  1.0f,  1.0f, 0.0f, 1.0f, 0.0f,
+
+					 1.0f,  1.0f,  1.0f, 0.0f, 1.0f, 0.0f,
+					-1.0f,  1.0f,  1.0f, 0.0f, 1.0f, 0.0f,
+					-1.0f,  1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+
+
+					-1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f,
+					 -1.0f, -1.0f,  1.0f, 0.0f, -1.0f, 0.0f,
+					 1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f,
+
+					 1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f,
+					 -1.0f, -1.0f,  1.0f, 0.0f, -1.0f, 0.0f,
+					 1.0f, -1.0f,  1.0f, 0.0f, -1.0f, 0.0f
+			};
+
+			GLfloat syootVert[] = {
+/*				-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+				0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+				0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+
+				0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+				-0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+				-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+
+
+				-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+				0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+				0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+
+				0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+				-0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+				-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+
+
+				-0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+				-0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+				-0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+
+				-0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+				-0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+				-0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+
+
+				0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+				0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+				0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+
+				0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+				0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+				0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+
+
+				-0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+				0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+				0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+
+				0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+				-0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+				-0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+
+
+				-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+				0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+				0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+
+				0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+				-0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+				-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f*/
+
+				-1.0f,  1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+				 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+				 -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+
+				 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+				 -1.0f,  1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+				 1.0f,  1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+
+
+				-1.0f, -1.0f,  1.0f, -1.0f, 0.0f, 0.0f,
+				-1.0f,  1.0f, -1.0f, -1.0f, 0.0f, 0.0f,
+				-1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f,
+
+				-1.0f,  1.0f, -1.0f, -1.0f, 0.0f, 0.0f,
+				-1.0f, -1.0f,  1.0f, -1.0f, 0.0f, 0.0f,
+				-1.0f,  1.0f,  1.0f, -1.0f, 0.0f, 0.0f,
+
+
+				 1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f,
+				 1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 0.0f,
+				 1.0f, -1.0f,  1.0f, 1.0f, 0.0f, 0.0f,
+
+				 1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 0.0f,
+				 1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f,
+				 1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 0.0f,
+
+
+				-1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+				 1.0f,  1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+				 -1.0f,  1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+
+				 1.0f,  1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+				-1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+				1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+
+
+				-1.0f,  1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+				 1.0f,  1.0f,  1.0f, 0.0f, 1.0f, 0.0f,
+				 1.0f,  1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+
+				 1.0f,  1.0f,  1.0f, 0.0f, 1.0f, 0.0f,
+				-1.0f,  1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+				-1.0f,  1.0f,  1.0f, 0.0f, 1.0f, 0.0f,
+
+
+				-1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f,
+				 1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f,
+				 -1.0f, -1.0f,  1.0f, 0.0f, -1.0f, 0.0f,
+
+				 1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f,
+				 1.0f, -1.0f,  1.0f, 0.0f, -1.0f, 0.0f,
+				 -1.0f, -1.0f,  1.0f, 0.0f, -1.0f, 0.0f
 			};
 
 			GLuint cube_vao;
@@ -276,11 +413,33 @@ int main() {
 			glBindVertexArray(cube_vao);
 			glBindBuffer(GL_ARRAY_BUFFER, cube_vbo);
 			glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0 );
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0 );
 			glEnableVertexAttribArray(0);
 
 			glBindVertexArray(0);
 
+			GLuint syoot_vao;
+			glGenVertexArrays(1, &syoot_vao);
+			GLuint syoot_vbo;
+			glGenBuffers(1, &syoot_vbo);
+
+			glBindVertexArray(syoot_vao);
+			glBindBuffer(GL_ARRAY_BUFFER, syoot_vbo);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(syootVert), &syootVert, GL_STATIC_DRAW);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0 );
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)) );
+			glEnableVertexAttribArray(0);
+			glEnableVertexAttribArray(1);	//fucking dammit
+
+
+			glBindVertexArray(0);
+
+			/*std::vector<GLuint> syoot_indices;
+			for(int i = 0; i < 36; ++i) {
+				syoot_indices.push_back(i);
+			}*/
+
+			//Mesh* syootMesh(skyboxVertices, syoot_indices, syoot_textures);
 
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
@@ -293,6 +452,7 @@ int main() {
 	double changeTime = 0;
 
     glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
 
 	while(!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -304,21 +464,6 @@ int main() {
 
 		glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-
-		glDepthMask(GL_FALSE);
-		cube_shader.Use();
-		glm::mat4 temp_c_view = glm::mat4(glm::mat3(camera->view));
-		glUniformMatrix4fv(glGetUniformLocation(cube_shader.getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(temp_c_view));
-		glUniformMatrix4fv(glGetUniformLocation(cube_shader.getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
-
-		glBindVertexArray(cube_vao);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubetexture);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glBindVertexArray(0);
-		glDepthMask(GL_TRUE);
-
-
 
         model_shader->Use();
 
@@ -362,6 +507,42 @@ int main() {
         glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
 
         mesh->Draw(model_shader);
+
+				glDepthFunc(GL_LEQUAL);
+
+						//glDepthMask(GL_FALSE);
+						cube_shader.Use();
+						glm::mat4 temp_c_view = glm::mat4(glm::mat3(camera->view));
+						glUniformMatrix4fv(glGetUniformLocation(cube_shader.getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(temp_c_view));
+						glUniformMatrix4fv(glGetUniformLocation(cube_shader.getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+
+						glBindVertexArray(cube_vao);
+						glBindTexture(GL_TEXTURE_CUBE_MAP, cubetexture);
+						glDrawArrays(GL_TRIANGLES, 0, 36);
+						glBindVertexArray(0);
+						//glDepthMask(GL_TRUE);
+						glDepthFunc(GL_LESS);
+
+						basic_shader->Use();
+						glm::mat4 zmodel = glm::mat4(1.0f);
+							zmodel = glm::translate(zmodel, glm::vec3(5.0f, 1.25f, 2.0f));
+							zmodel = glm::rotate(zmodel, glm::radians(syoot_angle), glm::vec3(1.0f, 0.0f, 0.0f));
+							zmodel = glm::rotate(zmodel, glm::radians(syoot_angle2), glm::vec3(0.0f, 1.0f, 0.0f));
+							zmodel = glm::rotate(zmodel, glm::radians(syoot_angle3), glm::vec3(0.0f, 0.0f, 1.0f));
+
+							zmodel = glm::scale(zmodel, glm::vec3(1.2f));
+						glUniformMatrix4fv(glGetUniformLocation(basic_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zmodel));
+						glUniformMatrix4fv(glGetUniformLocation(basic_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+						glUniformMatrix4fv(glGetUniformLocation(basic_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+						glUniform3f(glGetUniformLocation(basic_shader->getProgram(), "cameraPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
+
+						glBindVertexArray(syoot_vao);
+						glBindTexture(GL_TEXTURE_CUBE_MAP, cubetexture);
+						glDrawArrays(GL_TRIANGLES, 0, 36);
+						glBindVertexArray(0);
+
+
+
 
 		glfwSwapBuffers(window);
 	}
