@@ -35,6 +35,7 @@ Shader* model_shader;
 Shader* light_shader;
 Shader* outline_shader;
 Shader* basic_shader;
+Shader* loodle_shader;
 
 
 Camera* camera;
@@ -187,6 +188,7 @@ int main() {
 	outline_shader = new Shader("shaders/outliner.vs", "shaders/outliner.fs");
 	light_shader = new Shader("shaders/lighting.vs", "shaders/lighting.fs");
 	basic_shader = new Shader("shaders/basic.vs", "shaders/basic.fs");
+	loodle_shader = new Shader("shaders/morebasic.vs", "shaders/morebasic.fs");
 
 	camera = new Camera(glm::vec3(0.0f, 2.8f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT);
 
@@ -443,6 +445,29 @@ int main() {
 
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
+
+	/*	GLuint fbo;
+		glGenFrameBuffers(1, &fbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+		GLuint fbotext1;
+		glGenTextures(1, &fbotext1);
+		glBindTexture(GL_TEXTURE_2D, fbotext1);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL)
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_FILTER, GL_LINEAR);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT, GL_TEXTURE_2D, fbotext1, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);*/
+
+
+if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+	std::cout << "Error with the phat framebuffer, yo" << std::endl;
+}
+glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+
 		Shader cube_shader = Shader("shaders/cubeshad.vs", "shaders/cubeshad.fs");
 
     Model moodle = Model("assets/nano/nanosuit.obj");
@@ -454,6 +479,12 @@ int main() {
     glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		glDisable(GL_STENCIL_TEST);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
 	while(!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
@@ -464,6 +495,46 @@ int main() {
 
 		glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+
+		glDisable(GL_STENCIL_TEST);
+
+/*		glStencilMask(0x00);
+
+		glStencilMask(0xFF);
+				glEnable(GL_STENCIL_TEST);
+						glStencilFunc(GL_ALWAYS, 1, 0xFF);*/
+						light_shader->Use();
+				glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+				glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+						for(int i = 0; i < tmp_numPointLights; ++i) {
+						glm::mat4 zodel = glm::mat4(1.0f);
+								zodel = glm::translate(zodel, tmp_pointLights[i]);
+						zodel = glm::scale(zodel, glm::vec3(0.0005f, 0.004, 0.0005f));
+						glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
+								soodle.Draw(light_shader);
+						}
+
+/*						glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+						glStencilMask(0x00);
+						glDisable(GL_DEPTH_TEST);
+						outline_shader->Use();
+						glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+						glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+						for(int i = 0; i < tmp_numPointLights; ++i) {
+						glm::mat4 zodel = glm::mat4(1.0f);
+								zodel = glm::translate(zodel, tmp_pointLights[i]);
+						zodel = glm::scale(zodel, glm::vec3(0.0005f, 0.004, 0.0005f));
+						zodel = glm::scale(zodel, glm::vec3(1.2f, 1.2f, 1.2f));
+						glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
+								soodle.Draw(outline_shader);
+						}
+						glStencilMask(0xFF);
+						glEnable(GL_DEPTH_TEST);
+						glDisable(GL_STENCIL_TEST);
+						glStencilFunc(GL_ALWAYS, 1, 0xFF);
+
+		glStencilMask(0x00);*/
 
         model_shader->Use();
 
@@ -478,21 +549,6 @@ int main() {
 		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
         sendPointLights(model_shader, 1.0f, 0.02, 0.003);
         moodle.Draw(model_shader);
-
-
-        light_shader->Use();
-
-		glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
-		glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
-
-        for(int i = 0; i < tmp_numPointLights; ++i) {
-		    glm::mat4 zodel = glm::mat4(1.0f);
-            zodel = glm::translate(zodel, tmp_pointLights[i]);
-		    zodel = glm::scale(zodel, glm::vec3(0.0005f, 0.004, 0.0005f));
-		    glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
-            soodle.Draw(light_shader);
-        }
-
 
         model_shader->Use();
         glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
@@ -523,6 +579,23 @@ int main() {
 						//glDepthMask(GL_TRUE);
 						glDepthFunc(GL_LESS);
 
+				loodle_shader->Use();
+		glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+		glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+				zodel = glm::mat4(1.0f);
+				zodel = glm::translate(zodel, glm::vec3(0.0f, 0.0f, 1.0f));
+				zodel = glm::scale(zodel, glm::vec3(1.5f));
+				glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
+
+        mesh->Draw(loodle_shader);
+
+
+glEnable(GL_STENCIL_TEST);
+glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+glStencilMask(0xFF);
+glClear(GL_STENCIL_BUFFER_BIT);
+glStencilFunc(GL_ALWAYS, 1, 0xFF);
+
 						basic_shader->Use();
 						glm::mat4 zmodel = glm::mat4(1.0f);
 							zmodel = glm::translate(zmodel, glm::vec3(5.0f, 1.25f, 2.0f));
@@ -530,7 +603,7 @@ int main() {
 							zmodel = glm::rotate(zmodel, glm::radians(syoot_angle2), glm::vec3(0.0f, 1.0f, 0.0f));
 							zmodel = glm::rotate(zmodel, glm::radians(syoot_angle3), glm::vec3(0.0f, 0.0f, 1.0f));
 
-							zmodel = glm::scale(zmodel, glm::vec3(1.2f));
+							zmodel = glm::scale(zmodel, glm::vec3(1.2f, 1.2f, 1.2f));
 						glUniformMatrix4fv(glGetUniformLocation(basic_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zmodel));
 						glUniformMatrix4fv(glGetUniformLocation(basic_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
 						glUniformMatrix4fv(glGetUniformLocation(basic_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
@@ -540,6 +613,31 @@ int main() {
 						glBindTexture(GL_TEXTURE_CUBE_MAP, cubetexture);
 						glDrawArrays(GL_TRIANGLES, 0, 36);
 						glBindVertexArray(0);
+
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
+		//glDisable(GL_DEPTH_TEST);
+
+									outline_shader->Use();
+								zmodel = glm::mat4(1.0f);
+										zmodel = glm::translate(zmodel, glm::vec3(5.0f, 1.25f, 2.0f));
+										zmodel = glm::rotate(zmodel, glm::radians(syoot_angle), glm::vec3(1.0f, 0.0f, 0.0f));
+										zmodel = glm::rotate(zmodel, glm::radians(syoot_angle2), glm::vec3(0.0f, 1.0f, 0.0f));
+										zmodel = glm::rotate(zmodel, glm::radians(syoot_angle3), glm::vec3(0.0f, 0.0f, 1.0f));
+
+										zmodel = glm::scale(zmodel, glm::vec3(1.2f));
+										zmodel = glm::scale(zmodel, glm::vec3(1.1f));
+									glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zmodel));
+									glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+									glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+
+									glBindVertexArray(syoot_vao);
+									glBindTexture(GL_TEXTURE_CUBE_MAP, cubetexture);
+									glDrawArrays(GL_TRIANGLES, 0, 36);
+									glBindVertexArray(0);
+
+		glDisable(GL_STENCIL_TEST);
+		//glEnable(GL_DEPTH_TEST);
 
 
 
