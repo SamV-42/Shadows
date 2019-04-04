@@ -1,7 +1,7 @@
 #version 330 core
 
 struct PointLight {
-    vec3 position;
+  vec3 position;
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
@@ -14,7 +14,7 @@ uniform PointLight pointLights[NR_POINT_LIGHTS];
 
 struct Material {
 	sampler2D texture_diffuse;
-	sampler2D texture_specular;
+  sampler2D texture_specular;
 	float shininess;
 };
 uniform Material material0;
@@ -39,7 +39,7 @@ vec3 point_Lighting(PointLight light, vec3 norm, vec3 fragPos, vec3 viewDir) {  
 
     float distance = length(light.position - fragPos);
     float attenuation = 1.0f / (light.constant + light.linear * distance + light.quadratic * pow(distance, 2));
-    ambient  *= attenuation;  
+    ambient  *= attenuation;
     diffuse  *= attenuation;
     specular *= attenuation;
 
@@ -60,4 +60,3 @@ void main()
 
     color = vec4(output, 1.0f);
 }
-

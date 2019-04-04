@@ -36,6 +36,7 @@ Shader* light_shader;
 Shader* outline_shader;
 Shader* basic_shader;
 Shader* loodle_shader;
+Shader* lloodle_shader;
 
 
 Camera* camera;
@@ -189,12 +190,16 @@ int main() {
 	light_shader = new Shader("shaders/lighting.vs", "shaders/lighting.fs");
 	basic_shader = new Shader("shaders/basic.vs", "shaders/basic.fs");
 	loodle_shader = new Shader("shaders/morebasic.vs", "shaders/morebasic.fs");
+	lloodle_shader = new Shader("shaders/moorebasic.vs", "shaders/morebasic.fs");
+
 
 	camera = new Camera(glm::vec3(0.0f, 2.8f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT);
 
     Mesh* mesh;
+		GLuint text;
+		std::vector<Vertex> lertices;
+		std::vector<GLuint> indices;
     {
-        std::vector<Vertex> lertices;
         {
         Vertex v1; v1.Position = glm::vec3(0.0f, 0.0f, 0.0f); v1.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v1.TexCoords = glm::vec2(0.0f, 0.0f);
         Vertex v2; v2.Position = glm::vec3(1.0f, 0.0f, 0.0f); v2.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v2.TexCoords = glm::vec2(1.0f, 0.0f);
@@ -202,11 +207,11 @@ int main() {
         Vertex v4; v4.Position = glm::vec3(1.0f, 1.0f, 0.0f); v4.Normal = glm::vec3(0.0f, 0.0f, -1.0f); v4.TexCoords = glm::vec2(1.0f, 1.0f);
         lertices.push_back(v1); lertices.push_back(v2); lertices.push_back(v3); lertices.push_back(v4);
         }
-        std::vector<GLuint> indices; std::vector<Texture> textures;
+         std::vector<Texture> textures;
 
         indices.push_back(0); indices.push_back(2); indices.push_back(1); indices.push_back(1); indices.push_back(2); indices.push_back(3);
         indices.push_back(0); indices.push_back(1); indices.push_back(2); indices.push_back(1); indices.push_back(3); indices.push_back(2);
-        GLuint text = TextureFromFile("window.png","assets");
+        text = TextureFromFile("window.png","assets");
         GLuint text2 = TextureFromFile("window_specular.png","assets");
         Texture texty; texty.id = text; texty.type = "texture_diffuse"; texty.path="assets/window.png";
         Texture texty2; texty2.id = text; texty2.type = "texture_specular"; texty2.path="assets/window_specular.png";
@@ -446,20 +451,25 @@ int main() {
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
 
-	/*	GLuint fbo;
-		glGenFrameBuffers(1, &fbo);
+		GLuint fbo;
+		glGenFramebuffers(1, &fbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 		GLuint fbotext1;
 		glGenTextures(1, &fbotext1);
 		glBindTexture(GL_TEXTURE_2D, fbotext1);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL)
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbotext1, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT, GL_TEXTURE_2D, fbotext1, 0);
-		glBindTexture(GL_TEXTURE_2D, 0);*/
-
+		GLuint rbo;
+		glGenRenderbuffers(1, &rbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 	std::cout << "Error with the phat framebuffer, yo" << std::endl;
@@ -472,18 +482,11 @@ glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     Model moodle = Model("assets/nano/nanosuit.obj");
     Model soodle = Model("assets/textures/hst.3ds");
+		Model yoodle = Model("assets/minion/novo superman.obj");
+
 
 	double timer = glfwGetTime();
 	double changeTime = 0;
-
-    glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
-
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		glDisable(GL_STENCIL_TEST);
-		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 	while(!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -493,17 +496,117 @@ glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		if(handleStuff()) break;
 
-		glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
+//--------------------------------------------------------------------HERE------------
+/*
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glDisable(GL_DEPTH);
+{
+		light_shader->Use();
+glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+		for(int i = 0; i < tmp_numPointLights; ++i) {
+		glm::mat4 zodel = glm::mat4(1.0f);
+				zodel = glm::translate(zodel, tmp_pointLights[i]);
+		zodel = glm::scale(zodel, glm::vec3(0.0005f, 0.004, 0.0005f));
+		glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
+				soodle.Draw(light_shader);
+		}
+
+model_shader->Use();
+
+glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
+glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+glUniform1f(glGetUniformLocation(model_shader->getProgram(), "material0.shininess"), 64);
+glm::mat4 podel = glm::mat4(1.0f);
+podel = glm::translate(podel, position);
+podel = glm::scale(podel, glm::vec3(0.12f));
+podel = glm::rotate(podel, glm::radians(direction), glm::vec3(0.0f, 1.0f, 0.0f));
+glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
+sendPointLights(model_shader, 1.0f, 0.02, 0.003);
+moodle.Draw(model_shader);
+
+model_shader->Use();
+glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
+glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+glUniform1f(glGetUniformLocation(model_shader->getProgram(), "material0.shininess"), 64);
+sendPointLights(model_shader, 1.0f, 1.0f, 0.002f);
+glm::mat4 zodel = glm::mat4(1.0f);
+zodel = glm::translate(zodel, glm::vec3(-5.0f, -1.25f, 0.0f));
+zodel = glm::rotate(zodel, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+zodel = glm::scale(zodel, glm::vec3(12.0f));
+glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
+
+mesh->Draw(model_shader);
+}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glEnable(GL_DEPTH);
+
+//*/
+//--------------------------------------------------------------------HERE------------
+
+
+glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+//glViewport(0, 0, WIDTH, HEIGHT);
+
+		glClearColor(0.4f, 0.1f, 0.4f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+		glDisable(GL_STENCIL_TEST);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		glDisable(GL_STENCIL_TEST);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-/*		glStencilMask(0x00);
+/*
+		loodle_shader->Use();
+glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+		glm::mat4 dimmerswitch = glm::mat4(1.0f);
+		dimmerswitch = glm::translate(dimmerswitch, glm::vec3(0.0f, 0.0f, -1.0f));
+		dimmerswitch = glm::scale(dimmerswitch, glm::vec3(1.5f));
+		glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(dimmerswitch));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, fbotext1);
+		glUniform1i(glGetUniformLocation(loodle_shader->getProgram(), "text"), 0);
+		mesh->Draw(loodle_shader);*/
+
+		glStencilMask(0x00);
 
 		glStencilMask(0xFF);
 				glEnable(GL_STENCIL_TEST);
-						glStencilFunc(GL_ALWAYS, 1, 0xFF);*/
+						glStencilFunc(GL_ALWAYS, 1, 0xFF);
+						glDepthFunc(GL_LEQUAL);
+
+								//glDepthMask(GL_FALSE);
+								cube_shader.Use();
+								glm::mat4 temp_c_view = glm::mat4(glm::mat3(camera->view));
+								glUniformMatrix4fv(glGetUniformLocation(cube_shader.getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(temp_c_view));
+								glUniformMatrix4fv(glGetUniformLocation(cube_shader.getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+
+								glBindVertexArray(cube_vao);
+								glActiveTexture(GL_TEXTURE0);
+								glBindTexture(GL_TEXTURE_CUBE_MAP, cubetexture);
+								glDrawArrays(GL_TRIANGLES, 0, 36);
+								glBindVertexArray(0);
+								//glDepthMask(GL_TRUE);
+								glDepthFunc(GL_LESS);
+
+//*/
+//AAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaaAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAAAAAAAAAa
+//AAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaaAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAAAAAAAAAa
+//AAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaaAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAAAAAAAAAa
+
+
 						light_shader->Use();
 				glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
 				glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
@@ -514,27 +617,6 @@ glBindFramebuffer(GL_FRAMEBUFFER, 0);
 						glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
 								soodle.Draw(light_shader);
 						}
-
-/*						glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-						glStencilMask(0x00);
-						glDisable(GL_DEPTH_TEST);
-						outline_shader->Use();
-						glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
-						glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
-						for(int i = 0; i < tmp_numPointLights; ++i) {
-						glm::mat4 zodel = glm::mat4(1.0f);
-								zodel = glm::translate(zodel, tmp_pointLights[i]);
-						zodel = glm::scale(zodel, glm::vec3(0.0005f, 0.004, 0.0005f));
-						zodel = glm::scale(zodel, glm::vec3(1.2f, 1.2f, 1.2f));
-						glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
-								soodle.Draw(outline_shader);
-						}
-						glStencilMask(0xFF);
-						glEnable(GL_DEPTH_TEST);
-						glDisable(GL_STENCIL_TEST);
-						glStencilFunc(GL_ALWAYS, 1, 0xFF);
-
-		glStencilMask(0x00);*/
 
         model_shader->Use();
 
@@ -548,7 +630,19 @@ glBindFramebuffer(GL_FRAMEBUFFER, 0);
         podel = glm::rotate(podel, glm::radians(direction), glm::vec3(0.0f, 1.0f, 0.0f));
 		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
         sendPointLights(model_shader, 1.0f, 0.02, 0.003);
+
+				//glUniform1i(glGetUniformLocation(model_shader->getProgram(), "moot.texture_diffuse"), text);   //"material." +
+				//glUniform1i(glGetUniformLocation(model_shader->getProgram(), "moot.texture_specular"), text);   //"material." +
+
         moodle.Draw(model_shader);
+
+
+				podel = glm::mat4(1.0f);
+				podel = glm::translate(podel, glm::vec3(-1.0f, 0.0f, 1.0f));
+				podel = glm::scale(podel, glm::vec3(0.5f));
+				podel = glm::rotate(podel, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+				glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
+				yoodle.Draw(model_shader);
 
         model_shader->Use();
         glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
@@ -564,31 +658,20 @@ glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         mesh->Draw(model_shader);
 
-				glDepthFunc(GL_LEQUAL);
-
-						//glDepthMask(GL_FALSE);
-						cube_shader.Use();
-						glm::mat4 temp_c_view = glm::mat4(glm::mat3(camera->view));
-						glUniformMatrix4fv(glGetUniformLocation(cube_shader.getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(temp_c_view));
-						glUniformMatrix4fv(glGetUniformLocation(cube_shader.getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
-
-						glBindVertexArray(cube_vao);
-						glBindTexture(GL_TEXTURE_CUBE_MAP, cubetexture);
-						glDrawArrays(GL_TRIANGLES, 0, 36);
-						glBindVertexArray(0);
-						//glDepthMask(GL_TRUE);
-						glDepthFunc(GL_LESS);
-
 				loodle_shader->Use();
+				glUniform1i(glGetUniformLocation(loodle_shader->getProgram(), "flatscreen"), 1);
+
 		glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
 		glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
 				zodel = glm::mat4(1.0f);
 				zodel = glm::translate(zodel, glm::vec3(0.0f, 0.0f, 1.0f));
 				zodel = glm::scale(zodel, glm::vec3(1.5f));
 				glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, text);
+				glUniform1i(glGetUniformLocation(loodle_shader->getProgram(), "text"), 0);
 
         mesh->Draw(loodle_shader);
-
 
 glEnable(GL_STENCIL_TEST);
 glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -637,10 +720,36 @@ glStencilFunc(GL_ALWAYS, 1, 0xFF);
 									glBindVertexArray(0);
 
 		glDisable(GL_STENCIL_TEST);
-		//glEnable(GL_DEPTH_TEST);
+		glEnable(GL_DEPTH_TEST);
+//*/
+///*
+glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//glViewport(0, 0, WIDTH, HEIGHT);
+glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+glClear(GL_COLOR_BUFFER_BIT);
+glDisable(GL_DEPTH_TEST);
 
+//glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
+lloodle_shader->Use();
 
+glActiveTexture(GL_TEXTURE0);
+glUniform1i(glGetUniformLocation(lloodle_shader->getProgram(), "text" ), 0);   //"material." +
+
+glm::mat4 identi = glm::mat4(1.0f);
+glUniformMatrix4fv(glGetUniformLocation(lloodle_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(identi));
+glUniformMatrix4fv(glGetUniformLocation(lloodle_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(identi));
+glUniformMatrix4fv(glGetUniformLocation(lloodle_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(identi));
+
+		glBindVertexArray(mesh->VAO);
+		glBindTexture(GL_TEXTURE_2D, fbotext1);
+		glDrawElements( GL_TRIANGLES, mesh->indices.size(),  GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+
+glEnable(GL_DEPTH_TEST);
+//*/
+
+//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE);
 
 		glfwSwapBuffers(window);
 	}

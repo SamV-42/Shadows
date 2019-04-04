@@ -10,11 +10,11 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 
-uniform int flatscreen;
-
 void main() {
   vec4 posi = projection * view * model * vec4(position, 1.0);
-  posi.z *= flatscreen;
+  posi.z *= 0;
+  posi.xy *= 2;
+  posi.xy -= 1;
   gl_Position = posi;
   TexCoord = texCoord;
 }
