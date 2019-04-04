@@ -476,7 +476,31 @@ if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 }
 glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+GLuint ubo_pv;
+glGenBuffers(1, &ubo_pv);
+glBindBuffer(GL_UNIFORM_BUFFER, ubo_pv);
+glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+struct temp_kludge {
+	static void setIndex(Shader* shader, std::string name, int n) {
+		GLuint index = glGetUniformBlockIndex(shader->getProgram(), name.c_str());
+		glUniformBlockBinding(shader->getProgram(), index, n);
+	}
+};
+temp_kludge::setIndex(model_shader, "Matrices", 3);
+temp_kludge::setIndex(light_shader, "Matrices", 3);
+temp_kludge::setIndex(outline_shader, "Matrices", 3);
+temp_kludge::setIndex(basic_shader, "Matrices", 3);
+temp_kludge::setIndex(loodle_shader, "Matrices", 3);
+temp_kludge::setIndex(lloodle_shader, "Matrices", 3);
+
+glBindBufferBase(GL_UNIFORM_BUFFER, 3, ubo_pv);
+
+glBindBuffer(GL_UNIFORM_BUFFER, ubo_pv);
+glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(camera->projection));
+glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(camera->view));
+glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 		Shader cube_shader = Shader("shaders/cubeshad.vs", "shaders/cubeshad.fs");
 
@@ -548,6 +572,10 @@ mesh->Draw(model_shader);
 //*/
 //--------------------------------------------------------------------HERE------------
 
+glBindBuffer(GL_UNIFORM_BUFFER, ubo_pv);
+glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(camera->view));
+glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 
 glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 //glViewport(0, 0, WIDTH, HEIGHT);
@@ -608,8 +636,8 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
 
 
 						light_shader->Use();
-				glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
-				glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+		//		glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+		//		glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
 						for(int i = 0; i < tmp_numPointLights; ++i) {
 						glm::mat4 zodel = glm::mat4(1.0f);
 								zodel = glm::translate(zodel, tmp_pointLights[i]);
@@ -621,8 +649,8 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
         model_shader->Use();
 
 		glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
-		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
-		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+	//	glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+	//	glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
         glUniform1f(glGetUniformLocation(model_shader->getProgram(), "material0.shininess"), 64);
 		glm::mat4 podel = glm::mat4(1.0f);
         podel = glm::translate(podel, position);
@@ -646,8 +674,8 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
 
         model_shader->Use();
         glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
-		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
-		glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+	//	glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+	//	glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
         glUniform1f(glGetUniformLocation(model_shader->getProgram(), "material0.shininess"), 64);
         sendPointLights(model_shader, 1.0f, 1.0f, 0.002f);
     	glm::mat4 zodel = glm::mat4(1.0f);
@@ -661,8 +689,8 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
 				loodle_shader->Use();
 				glUniform1i(glGetUniformLocation(loodle_shader->getProgram(), "flatscreen"), 1);
 
-		glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
-		glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+	//	glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+	//	glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
 				zodel = glm::mat4(1.0f);
 				zodel = glm::translate(zodel, glm::vec3(0.0f, 0.0f, 1.0f));
 				zodel = glm::scale(zodel, glm::vec3(1.5f));
@@ -688,8 +716,8 @@ glStencilFunc(GL_ALWAYS, 1, 0xFF);
 
 							zmodel = glm::scale(zmodel, glm::vec3(1.2f, 1.2f, 1.2f));
 						glUniformMatrix4fv(glGetUniformLocation(basic_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zmodel));
-						glUniformMatrix4fv(glGetUniformLocation(basic_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
-						glUniformMatrix4fv(glGetUniformLocation(basic_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+		//				glUniformMatrix4fv(glGetUniformLocation(basic_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+		//				glUniformMatrix4fv(glGetUniformLocation(basic_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
 						glUniform3f(glGetUniformLocation(basic_shader->getProgram(), "cameraPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
 
 						glBindVertexArray(syoot_vao);
@@ -711,8 +739,8 @@ glStencilFunc(GL_ALWAYS, 1, 0xFF);
 										zmodel = glm::scale(zmodel, glm::vec3(1.2f));
 										zmodel = glm::scale(zmodel, glm::vec3(1.1f));
 									glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zmodel));
-									glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
-									glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+			//						glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+			//						glUniformMatrix4fv(glGetUniformLocation(outline_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
 
 									glBindVertexArray(syoot_vao);
 									glBindTexture(GL_TEXTURE_CUBE_MAP, cubetexture);
