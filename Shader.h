@@ -10,6 +10,7 @@
 class Shader {
 public:
 	Shader(std::string vertex_path, std::string fragment_path);
+	Shader(std::string vertex_path, std::string fragment_path, std::string geometry_path);
 
 	const GLuint getProgram();
 	void Use();

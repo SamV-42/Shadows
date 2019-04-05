@@ -37,6 +37,7 @@ Shader* outline_shader;
 Shader* basic_shader;
 Shader* loodle_shader;
 Shader* lloodle_shader;
+Shader* grass_shader;
 
 
 Camera* camera;
@@ -185,12 +186,13 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
-	model_shader = new Shader("shaders/main.vs", "shaders/main.fs");
+	model_shader = new Shader("shaders/main.vs", "shaders/main.fs", "shaders/muon.gs");
 	outline_shader = new Shader("shaders/outliner.vs", "shaders/outliner.fs");
 	light_shader = new Shader("shaders/lighting.vs", "shaders/lighting.fs");
 	basic_shader = new Shader("shaders/basic.vs", "shaders/basic.fs");
 	loodle_shader = new Shader("shaders/morebasic.vs", "shaders/morebasic.fs");
 	lloodle_shader = new Shader("shaders/moorebasic.vs", "shaders/morebasic.fs");
+	grass_shader = new Shader("shaders/grass.vs", "shaders/grass.fs", "shaders/grass.gs");
 
 
 	camera = new Camera(glm::vec3(0.0f, 2.8f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT);
@@ -494,6 +496,8 @@ temp_kludge::setIndex(outline_shader, "Matrices", 3);
 temp_kludge::setIndex(basic_shader, "Matrices", 3);
 temp_kludge::setIndex(loodle_shader, "Matrices", 3);
 temp_kludge::setIndex(lloodle_shader, "Matrices", 3);
+temp_kludge::setIndex(grass_shader, "Matrices", 3);
+
 
 glBindBufferBase(GL_UNIFORM_BUFFER, 3, ubo_pv);
 
@@ -501,6 +505,19 @@ glBindBuffer(GL_UNIFORM_BUFFER, ubo_pv);
 glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(camera->projection));
 glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(camera->view));
 glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+GLfloat grass_points[] = { 0.125f, 0.25f, 0.5f, 1.0f, 2.0f, 4.0f };
+
+GLuint grass_vao;
+glGenVertexArrays(1, &grass_vao);
+GLuint grass_vbo;
+glGenBuffers(1, &grass_vbo);
+glBindVertexArray(grass_vao);
+glBindBuffer(GL_ARRAY_BUFFER, grass_vbo);
+glBufferData(GL_ARRAY_BUFFER, sizeof(grass_points), &grass_points, GL_STATIC_DRAW);
+glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, sizeof(GLfloat), (GLvoid*)0 );
+glEnableVertexAttribArray(0);
+glBindVertexArray(0);
 
 		Shader cube_shader = Shader("shaders/cubeshad.vs", "shaders/cubeshad.fs");
 
@@ -608,6 +625,13 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
 		glUniform1i(glGetUniformLocation(loodle_shader->getProgram(), "text"), 0);
 		mesh->Draw(loodle_shader);*/
 
+		grass_shader->Use();
+
+			glBindVertexArray(grass_vao);
+			glDrawArrays(GL_POINTS, 0, 6);
+			glBindVertexArray(0);
+
+
 		glStencilMask(0x00);
 
 		glStencilMask(0xFF);
@@ -634,7 +658,6 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
 //AAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaaAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAAAAAAAAAa
 //AAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaaAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAAAAAAAAAa
 
-
 						light_shader->Use();
 		//		glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
 		//		glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
@@ -647,6 +670,7 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
 						}
 
         model_shader->Use();
+				glUniform1f(glGetUniformLocation(model_shader->getProgram(), "time"), glfwGetTime());
 
 		glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
 	//	glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
@@ -673,6 +697,8 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
 				yoodle.Draw(model_shader);
 
         model_shader->Use();
+				glUniform1f(glGetUniformLocation(model_shader->getProgram(), "time"), glfwGetTime());
+
         glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
 	//	glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
 	//	glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
@@ -749,6 +775,7 @@ glStencilFunc(GL_ALWAYS, 1, 0xFF);
 
 		glDisable(GL_STENCIL_TEST);
 		glEnable(GL_DEPTH_TEST);
+
 //*/
 ///*
 glBindFramebuffer(GL_FRAMEBUFFER, 0);

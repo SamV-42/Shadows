@@ -4,9 +4,11 @@ layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 texCoord;
 
-out vec2 TexCoord;
-out vec3 Normal;
-out vec3 FragPos;
+out VS_TO_GS {
+  vec2 TexCoord;
+  vec3 Normal;
+  vec3 FragPos;
+} vs_to_fs_var1;
 
 uniform mat4 model;
 layout (std140) uniform Matrices {
@@ -17,7 +19,7 @@ layout (std140) uniform Matrices {
 void main()
 {
     gl_Position = projection * view * model * vec4(position, 1.0f);
-    FragPos = vec3(model * vec4(position, 1.0f));
-    TexCoord = texCoord;
-    Normal = mat3(transpose(inverse(model)))*normal;
+    vs_to_fs_var1.FragPos = vec3(model * vec4(position, 1.0f));
+    vs_to_fs_var1.TexCoord = texCoord;
+    vs_to_fs_var1.Normal = mat3(transpose(inverse(model)))*normal;
 }
