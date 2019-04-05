@@ -11,7 +11,7 @@
 class Model {
 public:
     Model(std::string path);
-    void Draw(Shader* shader);
+    void Draw(Shader* shader, int instance_number = 1);
 
     std::vector<Mesh> mMeshes;
     std::string directory;

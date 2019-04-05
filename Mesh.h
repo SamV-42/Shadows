@@ -32,7 +32,7 @@ public:
 
     Mesh(std::vector<Vertex> vertices_, std::vector<GLuint> indices_, std::vector<Texture> textures_);
 
-    void Draw(Shader* shader);
+    void Draw(Shader* shader, int instance_number = 1);
     void testing_updateVertices();
 
 //private:

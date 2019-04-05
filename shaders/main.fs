@@ -21,10 +21,11 @@ uniform Material material0;
 
 uniform vec3 viewPos;
 
-in GS_TO_FS {
+in VS_TO_FS {
   vec2 TexCoord;
   vec3 Normal;
   vec3 FragPos;
+  vec3 fakeNormal;
 } vs_to_fs_var2;
 
 out vec4 color;

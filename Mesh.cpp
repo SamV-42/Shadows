@@ -26,7 +26,7 @@ Mesh::Mesh(std::vector<Vertex> vertices_, std::vector<GLuint> indices_, std::vec
     glBindVertexArray(0);
 }
 
-void Mesh::Draw(Shader* shader) {
+void Mesh::Draw(Shader* shader, int instance_number) {
     int diffuseNr = 0;
     int specularNr = 0;
     for(int i = 0; i < textures.size(); ++i) {
@@ -45,7 +45,8 @@ void Mesh::Draw(Shader* shader) {
 
     //Make sure the proper shader is enabled -- do this wherever this is being called from
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    //glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, instance_number);
     glBindVertexArray(0);
 }
 

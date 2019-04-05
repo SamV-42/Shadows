@@ -9,9 +9,9 @@
 #include "Model.h"
 #include "utils.hpp"    //TextureFromFile
 
-void Model::Draw(Shader* shader) {
+void Model::Draw(Shader* shader, int instance_number) {
     for(auto mesh : mMeshes) {
-        mesh.Draw(shader);
+        mesh.Draw(shader, instance_number);
     }
 }
 

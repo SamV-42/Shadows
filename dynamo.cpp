@@ -1,6 +1,7 @@
 // Sources: this, Shader.cpp, utils.cpp, camera->cpp
 // Libraries: GL, SOIL, GLEW, glfw
 #include <string>
+#include <sstream>
 #include <vector>
 #include <unordered_map>
 #include <iostream>
@@ -37,7 +38,8 @@ Shader* outline_shader;
 Shader* basic_shader;
 Shader* loodle_shader;
 Shader* lloodle_shader;
-Shader* grass_shader;
+Shader* gross_shader;
+Shader* normaller_shader;
 
 
 Camera* camera;
@@ -192,7 +194,8 @@ int main() {
 	basic_shader = new Shader("shaders/basic.vs", "shaders/basic.fs");
 	loodle_shader = new Shader("shaders/morebasic.vs", "shaders/morebasic.fs");
 	lloodle_shader = new Shader("shaders/moorebasic.vs", "shaders/morebasic.fs");
-	grass_shader = new Shader("shaders/grass.vs", "shaders/grass.fs", "shaders/grass.gs");
+	gross_shader = new Shader("shaders/grass.vs", "shaders/grass.fs", "shaders/grass.gs");
+	normaller_shader = new Shader("shaders/main.vs", "shaders/outliner.fs", "shaders/moony.gs");
 
 
 	camera = new Camera(glm::vec3(0.0f, 2.8f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT);
@@ -496,7 +499,8 @@ temp_kludge::setIndex(outline_shader, "Matrices", 3);
 temp_kludge::setIndex(basic_shader, "Matrices", 3);
 temp_kludge::setIndex(loodle_shader, "Matrices", 3);
 temp_kludge::setIndex(lloodle_shader, "Matrices", 3);
-temp_kludge::setIndex(grass_shader, "Matrices", 3);
+temp_kludge::setIndex(gross_shader, "Matrices", 3);
+temp_kludge::setIndex(normaller_shader, "Matrices", 3);
 
 
 glBindBufferBase(GL_UNIFORM_BUFFER, 3, ubo_pv);
@@ -625,7 +629,7 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
 		glUniform1i(glGetUniformLocation(loodle_shader->getProgram(), "text"), 0);
 		mesh->Draw(loodle_shader);*/
 
-		grass_shader->Use();
+		gross_shader->Use();
 
 			glBindVertexArray(grass_vao);
 			glDrawArrays(GL_POINTS, 0, 6);
@@ -671,6 +675,8 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
 
         model_shader->Use();
 				glUniform1f(glGetUniformLocation(model_shader->getProgram(), "time"), glfwGetTime());
+				glUniform1i(glGetUniformLocation(model_shader->getProgram(), "offset_enabled"), 0);
+
 
 		glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
 	//	glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
@@ -688,6 +694,21 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
 
         moodle.Draw(model_shader);
 
+				glUniform1i(glGetUniformLocation(model_shader->getProgram(), "offset_enabled"), 1);
+				podel = glm::scale(podel, glm::vec3(0.1f));
+				glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
+				glm::vec2 golfsets[25];
+				for(int i = -2; i < 3; ++i) {
+					for(int j = -2; j < 3; ++j) {
+						int k = (j+2) + 5*(i+2);
+						const float offsetteroonie = 0.5;
+						golfsets[k] = glm::vec2((GLfloat)i * offsetteroonie, (GLfloat)j * offsetteroonie);
+						std::stringstream iss; std::string iss_str; iss << k; iss_str = iss.str();
+						glUniform2f(glGetUniformLocation(model_shader->getProgram(), ("offsets[" + iss_str + "]").c_str()), golfsets[k].x, golfsets[k].y );
+					}
+				}
+				moodle.Draw(model_shader, 25);
+				glUniform1i(glGetUniformLocation(model_shader->getProgram(), "offset_enabled"), 0);
 
 				podel = glm::mat4(1.0f);
 				podel = glm::translate(podel, glm::vec3(-1.0f, 0.0f, 1.0f));
@@ -696,8 +717,17 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
 				glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
 				yoodle.Draw(model_shader);
 
+				normaller_shader->Use();
+					podel = glm::mat4(1.0f);
+					podel = glm::translate(podel, position);
+					podel = glm::scale(podel, glm::vec3(0.12f));
+					podel = glm::rotate(podel, glm::radians(direction), glm::vec3(0.0f, 1.0f, 0.0f));
+					glUniformMatrix4fv(glGetUniformLocation(normaller_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
+					moodle.Draw(normaller_shader);
+
         model_shader->Use();
 				glUniform1f(glGetUniformLocation(model_shader->getProgram(), "time"), glfwGetTime());
+				glUniform1i(glGetUniformLocation(model_shader->getProgram(), "offset_enabled"), 0);
 
         glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
 	//	glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));

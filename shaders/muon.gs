@@ -3,13 +3,13 @@
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 3) out;
 
-in VS_TO_GS {
+in VS_TO_FS {
   vec2 TexCoord;
   vec3 Normal;
   vec3 FragPos;
 } vs_to_gs_var_in[];
 
-out GS_TO_FS {
+out VS_TO_FS {  //huh, guess this work?
   vec2 TexCoord;
   vec3 Normal;
   vec3 FragPos;
@@ -25,7 +25,7 @@ vec3 GetNormal() {
 }
 
 vec4 explode(vec4 position, vec3 normal) {
-  float magnitude = 0.5f;
+  float magnitude = 0.0f;
   float amount = magnitude * ((sin(time) + 1.0f) / 2.0f) ;
   return position + vec4(amount * normal, 0.0f);
 }
