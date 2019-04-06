@@ -455,31 +455,51 @@ int main() {
 
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
-
+//glfwWindowHint(GLFW_SAMPLES, 4);
+//glEnable(GL_MULTISAMPLE);
 		GLuint fbo;
 		glGenFramebuffers(1, &fbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 		GLuint fbotext1;
 		glGenTextures(1, &fbotext1);
-		glBindTexture(GL_TEXTURE_2D, fbotext1);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, fbotext1);
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, WIDTH, HEIGHT, GL_TRUE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbotext1, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, fbotext1, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		GLuint rbo;
 		glGenRenderbuffers(1, &rbo);
 		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-	std::cout << "Error with the phat framebuffer, yo" << std::endl;
-}
-glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			std::cout << "Error with the phat framebuffer2, yo" << std::endl;
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		GLuint fbo2;
+		glGenFramebuffers(1, &fbo2);
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo2);
+
+		GLuint fbotext12;
+		glGenTextures(1, &fbotext12);
+		glBindTexture(GL_TEXTURE_2D, fbotext12);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbotext12, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			std::cout << "Error with the phat framebuffer2, yo" << std::endl;
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 
 GLuint ubo_pv;
 glGenBuffers(1, &ubo_pv);
@@ -536,61 +556,13 @@ glBindVertexArray(0);
 	while(!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
-		changeTime = timer - glfwGetTime();
+		changeTime = glfwGetTime() - timer;
 		timer = glfwGetTime();
+
+		std::cout << changeTime << std::endl;
 
 		if(handleStuff()) break;
 
-//--------------------------------------------------------------------HERE------------
-/*
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glDisable(GL_DEPTH);
-{
-		light_shader->Use();
-glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
-glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
-		for(int i = 0; i < tmp_numPointLights; ++i) {
-		glm::mat4 zodel = glm::mat4(1.0f);
-				zodel = glm::translate(zodel, tmp_pointLights[i]);
-		zodel = glm::scale(zodel, glm::vec3(0.0005f, 0.004, 0.0005f));
-		glUniformMatrix4fv(glGetUniformLocation(light_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
-				soodle.Draw(light_shader);
-		}
-
-model_shader->Use();
-
-glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
-glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
-glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
-glUniform1f(glGetUniformLocation(model_shader->getProgram(), "material0.shininess"), 64);
-glm::mat4 podel = glm::mat4(1.0f);
-podel = glm::translate(podel, position);
-podel = glm::scale(podel, glm::vec3(0.12f));
-podel = glm::rotate(podel, glm::radians(direction), glm::vec3(0.0f, 1.0f, 0.0f));
-glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
-sendPointLights(model_shader, 1.0f, 0.02, 0.003);
-moodle.Draw(model_shader);
-
-model_shader->Use();
-glUniform3f(glGetUniformLocation(model_shader->getProgram(), "viewPos"), camera->cameraPos.x, camera->cameraPos.y, camera->cameraPos.z);
-glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
-glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
-glUniform1f(glGetUniformLocation(model_shader->getProgram(), "material0.shininess"), 64);
-sendPointLights(model_shader, 1.0f, 1.0f, 0.002f);
-glm::mat4 zodel = glm::mat4(1.0f);
-zodel = glm::translate(zodel, glm::vec3(-5.0f, -1.25f, 0.0f));
-zodel = glm::rotate(zodel, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-zodel = glm::scale(zodel, glm::vec3(12.0f));
-glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
-
-mesh->Draw(model_shader);
-}
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glEnable(GL_DEPTH);
-
-//*/
 //--------------------------------------------------------------------HERE------------
 
 glBindBuffer(GL_UNIFORM_BUFFER, ubo_pv);
@@ -808,7 +780,13 @@ glStencilFunc(GL_ALWAYS, 1, 0xFF);
 
 //*/
 ///*
+
+glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo2);
+glBlitFramebuffer(0,0,WIDTH, HEIGHT, 0,0,WIDTH, HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
 glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 //glViewport(0, 0, WIDTH, HEIGHT);
 glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 glClear(GL_COLOR_BUFFER_BIT);
@@ -827,7 +805,7 @@ glUniformMatrix4fv(glGetUniformLocation(lloodle_shader->getProgram(), "view"), 1
 glUniformMatrix4fv(glGetUniformLocation(lloodle_shader->getProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(identi));
 
 		glBindVertexArray(mesh->VAO);
-		glBindTexture(GL_TEXTURE_2D, fbotext1);
+		glBindTexture(GL_TEXTURE_2D, fbotext12);
 		glDrawElements( GL_TRIANGLES, mesh->indices.size(),  GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 

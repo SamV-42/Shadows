@@ -23,8 +23,8 @@ uniform int offset_enabled;
 void main()
 {
     mat4 translation;
-    mat4 new_model = model;
-    if(offset_enabled == 1) {
+    //mat4 new_model = model;
+    /*if(offset_enabled == 1) {
         translation[0][0] = 1;
         translation[1][1] = 1;
         translation[2][2] = 1;
@@ -33,8 +33,13 @@ void main()
         translation[3][0] = offsets[gl_InstanceID].x;
         translation[3][2] = offsets[gl_InstanceID].y;
         new_model = translation * model;
+    }*/
+    vec4 interm_pos = model * vec4(position, 1.0f);
+    if(offset_enabled == 1) {
+      interm_pos.x += offsets[gl_InstanceID].x;
+      interm_pos.z += offsets[gl_InstanceID].y;
     }
-    gl_Position = projection * view * new_model * vec4(position, 1.0f);
+    gl_Position = projection * view * interm_pos;
     vs_to_fs_var1.FragPos = vec3(model * vec4(position, 1.0f));
     vs_to_fs_var1.TexCoord = texCoord;
     vs_to_fs_var1.Normal = mat3(transpose(inverse(model)))*normal;
