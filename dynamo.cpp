@@ -122,6 +122,8 @@ bool handleStuff() {
         glm::vec4 change = glm::rotate(glm::mat4(1.0f), glm::radians(direction), glm::vec3(0.0f, 1.0f, 0.0f))*glm::vec4(0.0f, 0.0f, scale_fact, 1.0f);
         position.x += change.x; position.z += change.z;
 
+				position.y += 0.075f*(GLfloat)(keys[GLFW_KEY_Z] - keys[GLFW_KEY_X]);
+
 		camera->cameraFront = glm::normalize(position - camera->cameraPos);
 		camera->updateView();
 		return false;
@@ -441,7 +443,7 @@ int main() {
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0 );
 			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)) );
 			glEnableVertexAttribArray(0);
-			glEnableVertexAttribArray(1);	//fucking dammit
+			glEnableVertexAttribArray(1);
 
 
 			glBindVertexArray(0);
@@ -548,7 +550,7 @@ glBindVertexArray(0);
     Model moodle = Model("assets/nano/nanosuit.obj");
     Model soodle = Model("assets/textures/hst.3ds");
 		Model yoodle = Model("assets/minion/novo superman.obj");
-
+		Model ttoodle = Model("assets/tap/take.obj");
 
 	double timer = glfwGetTime();
 	double changeTime = 0;
@@ -559,11 +561,13 @@ glBindVertexArray(0);
 		changeTime = glfwGetTime() - timer;
 		timer = glfwGetTime();
 
-		std::cout << changeTime << std::endl;
+		//std::cout << changeTime << std::endl;
 
 		if(handleStuff()) break;
 
 //--------------------------------------------------------------------HERE------------
+
+//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
 glBindBuffer(GL_UNIFORM_BUFFER, ubo_pv);
 glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(camera->view));
@@ -689,6 +693,15 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
 				glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
 				yoodle.Draw(model_shader);
 
+				glDisable(GL_CULL_FACE);
+				podel = glm::mat4(1.0f);
+				podel = glm::translate(podel, glm::vec3(-2.0f, 0.0f, 1.5f));
+				podel = glm::scale(podel, glm::vec3(0.02f));
+				podel = glm::rotate(podel, glm::radians(60.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+				glUniformMatrix4fv(glGetUniformLocation(model_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
+                ttoodle.Draw(model_shader);
+				glEnable(GL_CULL_FACE);
+
 				normaller_shader->Use();
 					podel = glm::mat4(1.0f);
 					podel = glm::translate(podel, position);
@@ -696,6 +709,13 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
 					podel = glm::rotate(podel, glm::radians(direction), glm::vec3(0.0f, 1.0f, 0.0f));
 					glUniformMatrix4fv(glGetUniformLocation(normaller_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
 					moodle.Draw(normaller_shader);
+
+					/*podel = glm::mat4(1.0f);
+					podel = glm::translate(podel, glm::vec3(-2.0f, 0.0f, 1.5f));
+					podel = glm::scale(podel, glm::vec3(0.02f));
+					podel = glm::rotate(podel, glm::radians(60.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+					glUniformMatrix4fv(glGetUniformLocation(normaller_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(podel));
+	                ttoodle.Draw(normaller_shader);*/
 
         model_shader->Use();
 				glUniform1f(glGetUniformLocation(model_shader->getProgram(), "time"), glfwGetTime());
@@ -724,7 +744,7 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
 				zodel = glm::scale(zodel, glm::vec3(1.5f));
 				glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, text);
+				glBindTexture(GL_TEXTURE_2D, text); //ttoodle.mMeshes[0].textures[0].id); // 
 				glUniform1i(glGetUniformLocation(loodle_shader->getProgram(), "text"), 0);
 
         mesh->Draw(loodle_shader);
@@ -787,6 +807,8 @@ glBlitFramebuffer(0,0,WIDTH, HEIGHT, 0,0,WIDTH, HEIGHT, GL_COLOR_BUFFER_BIT, GL_
 
 glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
 //glViewport(0, 0, WIDTH, HEIGHT);
 glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 glClear(GL_COLOR_BUFFER_BIT);
@@ -812,7 +834,7 @@ glUniformMatrix4fv(glGetUniformLocation(lloodle_shader->getProgram(), "projectio
 glEnable(GL_DEPTH_TEST);
 //*/
 
-//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE);
+//glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
 
 		glfwSwapBuffers(window);
 	}
