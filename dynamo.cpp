@@ -550,7 +550,7 @@ glBindVertexArray(0);
     Model moodle = Model("assets/nano/nanosuit.obj");
     Model soodle = Model("assets/textures/hst.3ds");
 		Model yoodle = Model("assets/minion/novo superman.obj");
-		Model ttoodle = Model("assets/tap/take.obj");
+		Model ttoodle = Model("assets/tup/tuu.obj");
 
 	double timer = glfwGetTime();
 	double changeTime = 0;
@@ -744,7 +744,7 @@ glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "projection
 				zodel = glm::scale(zodel, glm::vec3(1.5f));
 				glUniformMatrix4fv(glGetUniformLocation(loodle_shader->getProgram(), "model"), 1, GL_FALSE, glm::value_ptr(zodel));
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, text); //ttoodle.mMeshes[0].textures[0].id); // 
+				glBindTexture(GL_TEXTURE_2D, text); //ttoodle.mMeshes[0].textures[0].id); //
 				glUniform1i(glGetUniformLocation(loodle_shader->getProgram(), "text"), 0);
 
         mesh->Draw(loodle_shader);
