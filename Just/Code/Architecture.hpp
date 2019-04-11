@@ -1,6 +1,12 @@
 #ifndef ARCHITECTURE_HPP
 #define ARCHITECTURE_HPP
 
+#include <vector>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -9,6 +15,21 @@ public:
 
     bool shouldClose() {
       return false;
+    }
+
+    std::vector<std::string> readFile(const char* target) {
+      std::vector<std::string> output;
+      std::string line;
+      std::ifstream listStream(target);
+      if( ! listStream.is_open()) {
+        ERROR_LOG << "ERROR::ARCHITECTURE::READFILE::FILE NOT FOUND: " << target << std::endl;
+        throw 3;
+      }
+      while( std::getline(listStream, line) ) {
+        output.push_back(line);
+      }
+      listStream.close();
+      return output;
     }
 
     //timer

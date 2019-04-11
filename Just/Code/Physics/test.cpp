@@ -25,5 +25,11 @@ int main() {
     }
 
     //Octree::level = 1;
-    tester->testingPrint();
+    //tester->testingPrint();
+    AABB jdskf = AABB(0,4,0,2,2.5,2);
+    std::shared_ptr<AABB> x = tester->checkCollision(jdskf) ;
+    if(x != nullptr) {
+      x->testingPrint();
+    }
+    std::cout << (x == nullptr ? "Null" : "" ) << std::endl;
 };
