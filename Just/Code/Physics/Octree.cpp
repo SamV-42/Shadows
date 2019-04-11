@@ -117,7 +117,7 @@ std::shared_ptr<AABB> Octree::checkCollision(AABB & aabb) {
     unsigned char back = aabb.getMaxZ() < mBoundary.getCenterZ() ? 0x0F : 0xFF; // 0000 1111 - turn off 4567
     enabled = enabled & left & right & top & bottom & front & back;
 
-    std::cout << "HI|" << std::endl << std::hex << (int)enabled << std::endl;
+    //std::cout << "HI|" << std::endl << std::hex << (int)enabled << std::endl;
 
     for(int i = 0; i < 8; ++i) {
       if(enabled & (0x01 << i) != 0x00) {
