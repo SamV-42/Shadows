@@ -1,6 +1,8 @@
 #ifndef PLAYERVIEW_HPP
 #define PLAYERVIEW_HPP
 
+#include <cmath>
+
 #define GLEW_STATIC
 #include <GL/glew.h>
 
@@ -8,8 +10,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-const GLuint WIDTH = 1200;
-const GLuint HEIGHT = 800;
+const GLuint WIDTH = 400;
+const GLuint HEIGHT = 300;
 
 class PlayerView {
 public:
@@ -30,7 +32,14 @@ public:
   void respondToEvents() {
     glfwPollEvents();
 
-    //<<<>>> Put I/O into a place in Simulation
+    double fb = keys[GLFW_KEY_W] - keys[GLFW_KEY_S];
+    double rl = keys[GLFW_KEY_D] - keys[GLFW_KEY_A];
+
+    double speed = (1 - slow * 0.5) * (fb == rl ? abs(fb) : 1);
+    double angle = atan2(rl, fb);  //reversed so forward is 0, clockwise is positive
+
+    Simulation::getInstance() .mInput1.percentForward = speed;
+    Simulation::getInstance() .mInput1.angle = angle;
   }
 
   void updateView() {
@@ -43,8 +52,14 @@ public:
 
 private:
 
-  GLFWwindow* mWindow;
+  PlayerView() {
 
+  }
+
+//-----------------------------------------------------------------------------------
+//Initialization
+
+  GLFWwindow* mWindow;
 
   void initInitializeOpenGL() {
 
@@ -74,15 +89,6 @@ private:
     glfwSetCursorPosCallback(mWindow, clbkMouse);
   }
 
-  static void clbkMouse(GLFWwindow* window, double xpos, double ypos) {
-    getInstance();
-    //<<<>>>
-  }
-
-  static void clbkKey(GLFWwindow* window, int key, int scancode, int action, int mode) {
-    getInstance();
-    //<<<>>>
-  }
 
   void initLoadFiles() {
     //<<<>>>
@@ -96,9 +102,55 @@ private:
     //<<<>>>
   }
 
+//-----------------------------------------------------------------------------------
+//Input
 
+  static bool keys[512]; //WASD, respectively
 
-  PlayerView() { }
+  static void clbkKey(GLFWwindow* window, int key, int scancode, int action, int mode) {
+    if(action == GLFW_PRESS) {
+  		keys[key] = true;
+  	} else if(action == GLFW_RELEASE) {
+  		keys[key] = false;
+  	}
+  }
+
+  static double dx, dy;
+
+  static double getDx() {
+    double tdx = dx;
+    dx = 0;
+    return tdx;
+  }
+
+  static double getDy() {
+    double tdy = dy;
+    dy = 0;
+    return tdy;
+  }
+
+  static void clbkMouse(GLFWwindow* window, double xpos, double ypos) {
+    static bool mouseIn = true;
+    static GLfloat lastX = 400.0f;
+    static GLfloat lastY = 300.0f;
+
+    if(mouseIn) {
+  		lastX = xpos;
+  		lastY = ypos;
+  		mouseIn = false;
+  	}
+
+  	dx = xpos - lastX;
+  	dy = ypos - lastY;
+  	lastX = xpos;
+  	lastY = ypos;
+  }
+
+  //-----------------------------------------------------------------------------------
+  //Display
+
+  bool slow = false;
+
 
 //-----------------------------------------------------------
 //Singleton implementation below:
@@ -114,5 +166,9 @@ private:
   PlayerView(PlayerView const&);
   void operator=(PlayerView const&);
 };
+
+bool PlayerView::keys[512] = {};
+double PlayerView::dx = 0;
+double PlayerView::dy = 0;
 
 #endif

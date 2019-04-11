@@ -4,6 +4,12 @@
 class Simulation {
 public:
 
+  struct SimulationPlayerInput {
+    double percentForward; // -1 to 1
+    double angle; // world-relative, measured in radians
+  };
+  SimulationPlayerInput mInput1;
+
   void initialize() {
     //<<<>>> load AABBs/etc.
   }
@@ -11,6 +17,8 @@ public:
   void update() {
     //<<<>>> Update all entities, handle collisions, etc.
     //Store relevant data in a playerView-accessible place somehow
+
+
   }
 
 
