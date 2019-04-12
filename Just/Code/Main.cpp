@@ -1,9 +1,8 @@
-
 #include "Logging.hpp"
 
-#include "Architecture.hpp"
-#include "Simulation.hpp"
-#include "PlayerView.hpp"
+#include "Architecture.h"
+#include "Simulation.h"
+#include "PlayerView.h"
 
 void Initialize();
 bool MainLoop();
