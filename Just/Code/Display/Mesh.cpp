@@ -3,7 +3,7 @@
 #include "Mesh.h"
 
 Mesh::Mesh(std::vector<Vertex> & vertices_, std::vector<GLuint> & indices_, std::vector<Texture> & textures_)
-: vertices(_vertices), _indices(_indices), _textures(textures) {
+: vertices(vertices_), indices(indices_), textures(textures_) {
 
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);

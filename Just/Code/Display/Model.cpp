@@ -74,7 +74,9 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType 
     for(int i = 0; i < mat->GetTextureCount(type); ++i) {
         aiString str;
         mat->GetTexture(type, i, &str);
-        Texture texture(str.C_Str(), typeName);
+        std::string temp(str.C_Str());
+        temp = directory + "/" + temp;
+        Texture texture = Texture::createTexture(temp, typeName);
         textures.push_back(texture);
     }
     return textures;

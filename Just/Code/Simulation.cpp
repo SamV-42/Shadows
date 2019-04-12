@@ -8,9 +8,9 @@
 #include <iostream>
 
 void Simulation::initialize() {
-  auto AABBList = Architecture::getInstance() .readFile("GameData/AABBList.txt");
+  auto AABBFile = Architecture::getInstance() .readFile("GameData/AABBList.txt");
   double values[6] = {};
-  for(auto& line : AABBList) {
+  for(auto& line : AABBFile) {
     std::stringstream splitline(line);
     std::string split;
     int i = 0;

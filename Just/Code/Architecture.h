@@ -21,6 +21,8 @@ public:
 
     void resetTimer();
 
+    const static std::string texturePath;
+
 private:
 
   double mCurrentTime;

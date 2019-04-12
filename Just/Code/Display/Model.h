@@ -2,6 +2,7 @@
 #define MODEL_H
 
 #include "Mesh.h"
+#include "Shader/Shader.h"
 
 #include <cstring>
 #include <assimp/scene.h>

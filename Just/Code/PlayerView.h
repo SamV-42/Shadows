@@ -4,17 +4,14 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include "Shader/Shader.h"
+#include "Display/ModelWrapper.h"
+
+
 class PlayerView {
 public:
-  void initialize() {
-    initInitializeOpenGL(); //these should all probably go through Architecture somehow
-    initLoadFiles();        //  since they touch the actual hardware, at the very least
-    initInputOutput();      //  through file I/O if not also through openGL in general
 
-    initBufferData();
-    //note that for now, we're just going to try to keep everything in memory
-    //so no more streaming in new significant data, it's all in the heap or buffers somewhere
-  }
+  void initialize();
 
   bool shouldClose();
 
@@ -59,7 +56,11 @@ private:
   //-----------------------------------------------------------------------------------
   //Display
 
-  bool slow = false;
+  bool mSlow = false;
+
+  std::vector<Shader> mShaders;
+  std::vector<GLuint> mUniformBuffers;
+  std::vector<ModelWrapper> mModels;
 
 
 //-----------------------------------------------------------

@@ -8,6 +8,9 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+const std::string Architecture::texturePath = "Assets/";
+
+
 bool Architecture::shouldClose() {
   return false;
 }
