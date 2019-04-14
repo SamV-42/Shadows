@@ -12,13 +12,10 @@ out VS_TO_FS {
 } vs_to_fs_var1;
 
 uniform mat4 model;
-layout (std140) uniform Matrices {
-  mat4 projection;
-  mat4 view;
-};
-
-uniform vec2 offsets[25];
-uniform int offset_enabled;
+//layout (std140) uniform Matrices {
+  uniform mat4 projection;
+  uniform mat4 view;
+//};
 
 void main()
 {

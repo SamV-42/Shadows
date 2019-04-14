@@ -6,6 +6,7 @@
 
 #include "Shader/Shader.h"
 #include "Display/ModelWrapper.h"
+#include "Camera/TargetCamera.h"
 
 
 class PlayerView {
@@ -32,7 +33,9 @@ private:
 
   void initInitializeOpenGL();
 
-  void initLoadFiles();
+  void initLoadShaders();
+
+  void initLoadModels();
 
   void initBufferData();
 
@@ -53,14 +56,19 @@ private:
 
   static void clbkMouse(GLFWwindow* window, double xpos, double ypos);
 
+  static bool shouldCloseVariable;
+
   //-----------------------------------------------------------------------------------
   //Display
 
   bool mSlow = false;
+  ModelWrapper * mPlayer;
+
+  TargetCamera * camera;
 
   std::vector<Shader> mShaders;
   std::vector<GLuint> mUniformBuffers;
-  std::vector<ModelWrapper> mModels;
+  std::vector<std::vector<ModelWrapper> > mModels;  //draw models with the same shader together
 
 
 //-----------------------------------------------------------

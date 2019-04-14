@@ -1,1 +1,2 @@
 PrimaryModelShader.vs PrimaryModelShader.fs NO_PATH
+TestingDisplayShader.vs TestingDisplayShader.fs NO_PATH

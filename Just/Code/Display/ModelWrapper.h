@@ -8,15 +8,19 @@
 
 class ModelWrapper {
 public:
-  ModelWrapper(std::string path) : mModel(path) {};
+  ModelWrapper(std::string path, int shaderIndex);
 
   Model mModel;
 
-  inline glm::mat4 getModelMtx() const;
+  void draw(Shader* shader);
+
+  glm::mat4 & getModelMtx();
   void setModelMtx(const glm::mat4 & modelMtx);
   void translate(glm::vec3 translation);
+  glm::vec3 getTranslation();
 
 private:
+  int mShaderIndex;
   glm::mat4 mModelMtx;
 };
 

@@ -19,8 +19,8 @@
 #include "Architecture.h"
 #include "Display/ModelWrapper.h"
 
-const GLuint WIDTH = 400;
-const GLuint HEIGHT = 300;
+const GLuint WIDTH = 1200;
+const GLuint HEIGHT = 800;
 
 
 void PlayerView::initialize() {
@@ -29,19 +29,22 @@ void PlayerView::initialize() {
    //  through file I/O if not also through openGL in general
 
   initInitializeOpenGL();
-  initLoadFiles();        //shaders
-  initBufferData();       //models
+  initLoadShaders();
+  initLoadModels();
+  initBufferData();      //a few uniforms/UBOs, Camera
   initInputOutput();      //
   //note that for now, we're just going to try to keep everything in memory
   //so no more streaming in new significant data, it's all in the heap or buffers somewhere
 }
 
 bool PlayerView::shouldClose() {
-  return glfwWindowShouldClose(mWindow);
+  return glfwWindowShouldClose(mWindow) || shouldCloseVariable;
 }
 
 void PlayerView::respondToEvents() {
   glfwPollEvents();
+
+  shouldCloseVariable = keys[GLFW_KEY_ESCAPE];
 
   double fb = keys[GLFW_KEY_W] - keys[GLFW_KEY_S];
   double rl = keys[GLFW_KEY_D] - keys[GLFW_KEY_A];
@@ -52,9 +55,69 @@ void PlayerView::respondToEvents() {
   Simulation::getInstance() .mInput1.percentForward = speed;
   Simulation::getInstance() .mInput1.angle = angle;
 }
+///*
+const static int tmp_numPointLights = 4;
+static glm::vec3 tmp_pointLights[] = {
+		glm::vec3(  5, 0, 7  ),
+		glm::vec3(  2, 0, 3  ),
+		glm::vec3(  4, 0, -6  ),
+		glm::vec3(  0, 0, 8  )
+	};
+void sendPointLights(Shader* default_shader, GLfloat atn_c = 1.0f, GLfloat atn_l = 0.05f, GLfloat atn_q = 0.001f) {
+	std::string tempPlace = "pointLights[X].";
+	for(int i = 0; i < tmp_numPointLights; ++i) {	//int i = 0; i < light.translations.size(); ++i
+		tempPlace[12] = (char)('0' + i);
+		GLint lightPosLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "position").c_str() );
+		glUniform3f(lightPosLoc, tmp_pointLights[i].x, tmp_pointLights[i].y, tmp_pointLights[i].z);
+		GLint lightConstantLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "constant").c_str() );
+		glUniform1f(lightConstantLoc, atn_c);
+		GLint lightLinearLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "linear").c_str() );
+		glUniform1f(lightLinearLoc, atn_l);
+		GLint lightQuadraticLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "quadratic").c_str() );
+		glUniform1f(lightQuadraticLoc, atn_q);
 
+    glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+	GLint lightAmbientLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "ambient").c_str() );
+	GLint lightDiffuseLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "diffuse").c_str() );
+	GLint lightSpecularLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "specular").c_str() );
+	glm::vec3 lightAmbient = lightColor * glm::vec3(0.05f);
+	glUniform3f(lightAmbientLoc, lightAmbient.x, lightAmbient.y, lightAmbient.z);
+	glm::vec3 lightDiffuse = lightColor * glm::vec3(0.5f);
+	glUniform3f(lightDiffuseLoc, lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
+	glUniform3f(lightSpecularLoc, lightColor.x, lightColor.y, lightColor.z);
+
+	}
+}//*/
+
+//BEACON
 void PlayerView::updateView() {
-  //<<<>>> Display things!
+  glClearColor(0.4f, 0.1f, 0.4f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
+
+  for(int i = 0; i < mModels.size(); ++i) {
+    Shader & shader = mShaders.at(i);
+    shader.use();
+
+    shader.send3f(ShaderListEnum::viewPos, camera->getCameraPos().x, camera->getCameraPos().y, camera->getCameraPos().z);
+    shader.sendMatrix4fv(ShaderListEnum::view, camera->getView());
+
+    shader.sendMatrix4fv(ShaderListEnum::projection, camera->getProj());
+    sendPointLights(&shader, 1.0f, 0.02, 0.003);
+    glUniform1f(glGetUniformLocation(shader.getProgram(), "material0.shininess"), 64);
+
+    for(auto& model : mModels.at(i)) {
+      shader.sendMatrix4fv(ShaderListEnum::model, model.getModelMtx());
+
+      model.draw(&shader);
+    }
+  }//*/
+
+  //std::cout << mShaders.size() << std::endl;
+
+  glfwSwapBuffers(mWindow);
 }
 
 void PlayerView::shutdown() {
@@ -91,7 +154,7 @@ void PlayerView::initInitializeOpenGL() {
   glfwSetCursorPosCallback(mWindow, clbkMouse);
 }
 
-void PlayerView::initLoadFiles() {
+void PlayerView::initLoadShaders() {
   auto shaderFile = Architecture::getInstance() .readFile("GameData/ShaderList.txt");
   std::string values[3] = {};
   const std::string shader_location("Code/Shader/Shaders/");
@@ -104,10 +167,11 @@ void PlayerView::initLoadFiles() {
     }
     values[2] = ( (values[2] == shader_location + "NO_PATH") ? "NO_PATH" : values[2] );
     mShaders.push_back(Shader(values[0], values[1], values[2]));
+    mModels.push_back(std::vector<ModelWrapper>());
   }
 
-  std::string ubo_lists[3] = {"Matrices", "viewPos", "pointLights"};
-  for(int i = 0;    i < 3; ++i) {
+  std::vector<std::string> ubo_lists = {"Matrices", "viewPos", "pointLights"};  //C++11 only!
+  for(int i = 0; i < ubo_lists.size(); ++i) {
     for(auto& shader : mShaders) {
       GLuint index = glGetUniformBlockIndex(shader.getProgram(), ubo_lists[i].c_str() );
       glUniformBlockBinding(shader.getProgram(), index, i);
@@ -115,10 +179,11 @@ void PlayerView::initLoadFiles() {
   }
 }
 
-void PlayerView::initBufferData() {
+void PlayerView::initLoadModels() {
   auto modelsFile = Architecture::getInstance() .readFile("GameData/ModelList.txt");
   GLfloat values[10] = {};
   const std::string models_location("Assets/");
+  bool isFirst = true;
   for(auto& line : modelsFile) {
     std::stringstream splitline(line);
     std::string split;
@@ -127,6 +192,8 @@ void PlayerView::initBufferData() {
       values[i] = std::stod(split);
     }
     std::getline(splitline, split, ' ');
+    int modelShaderIndex = stoi(split);
+    std::getline(splitline, split, ' ');
     std::string modelPath = "Assets/" + split;
 
     glm::mat4 initialModelMtx = glm::mat4(1.0f);
@@ -134,10 +201,20 @@ void PlayerView::initBufferData() {
     initialModelMtx = glm::rotate(initialModelMtx, glm::radians(values[3]), glm::vec3(values[4], values[5], values[6]));
     initialModelMtx = glm::translate(initialModelMtx, glm::vec3(values[0], values[1], values[2]));
 
-    ModelWrapper model = ModelWrapper(modelPath);
+    ModelWrapper model = ModelWrapper(modelPath, modelShaderIndex);
     model.setModelMtx(initialModelMtx);
-    mModels.push_back(model);
+    mModels.at(modelShaderIndex).push_back(model);
+    if(isFirst) {
+      mPlayer = &mModels.at(modelShaderIndex).at(0);
+    }
+    isFirst = false;
   }
+}
+
+void PlayerView::initBufferData() {
+  camera = new TargetCamera(glm::vec3(0.0f, 2.8f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT, mPlayer->getTranslation());
+  camera->updatePlayerPosition();
+  camera->updateView();
 }
 
 void PlayerView::initInputOutput() {
@@ -181,6 +258,7 @@ void PlayerView::clbkMouse(GLFWwindow* window, double xpos, double ypos) {
   lastY = ypos;
 }
 
+bool PlayerView::shouldCloseVariable = false;
 bool PlayerView::keys[512] = {};
 double PlayerView::dx = 0;
 double PlayerView::dy = 0;

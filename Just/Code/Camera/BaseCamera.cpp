@@ -50,3 +50,7 @@ void BaseCamera::setCameraUp(const glm::vec3 & _CameraUp) {
     mDirty = true;
   }
 }
+
+glm::vec3 & BaseCamera::getCameraPos() {
+	return mCameraPos;
+}

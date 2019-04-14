@@ -6,13 +6,14 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include "Logging.hpp"
 #include "Shader.h"
 
 Shader::Shader(std::string vertex_path, std::string fragment_path) : Shader(vertex_path, fragment_path, "NO_PATH") {}
 
 Shader::Shader(std::string vertex_path, std::string fragment_path, std::string geometry_path) {
-
 	const GLchar* vertexShaderSource;
 	const GLchar* fragmentShaderSource;
 	const GLchar* geometryShaderSource;
@@ -111,6 +112,7 @@ Shader::Shader(std::string vertex_path, std::string fragment_path, std::string g
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
+	loadUniformLocations();
 }
 
 const GLuint Shader::getProgram() {
@@ -118,6 +120,33 @@ const GLuint Shader::getProgram() {
 }
 
 
-void Shader::Use() {
+void Shader::use() {
 	glUseProgram(shaderProgram);
+	/*for(auto& ghj : mUniformLocations) {
+		std::cout << ghj << " ";
+	}
+	std::cout << std::endl;*/
 }
+
+
+
+void Shader::loadUniformLocations() {
+	std::vector<std::string> & ShaderListString = _stupidMacroSetupFunction();
+	for(auto& name : ShaderListString) {
+		mUniformLocations.push_back(glGetUniformLocation(shaderProgram, name.c_str()));
+		//The C++ spec requires enums to start at 0 and go up by 1 each time
+		//so mUniformLocations[ShaderListEnum.viewPos] (for instance) should return the appropriate value
+	}
+}
+
+void Shader::send1f(ShaderListEnum uniform, GLfloat input1) { glUniform1f(mUniformLocations[uniform], input1); };
+void Shader::send2f(ShaderListEnum uniform, GLfloat input1, GLfloat input2) { glUniform2f(mUniformLocations[uniform], input1, input2); };
+void Shader::send3f(ShaderListEnum uniform, GLfloat input1, GLfloat input2, GLfloat input3) { glUniform3f(mUniformLocations[uniform], input1, input2, input3); };
+void Shader::send4f(ShaderListEnum uniform, GLfloat input1, GLfloat input2, GLfloat input3, GLfloat input4) { glUniform4f(mUniformLocations[uniform], input1, input2, input3, input4); };
+void Shader::send1i(ShaderListEnum uniform, GLint input1) { glUniform1i(mUniformLocations[uniform], input1); };
+void Shader::send2i(ShaderListEnum uniform, GLint input1, GLint input2) { glUniform2i(mUniformLocations[uniform], input1, input2); };
+void Shader::send3i(ShaderListEnum uniform, GLint input1, GLint input2, GLint input3) { glUniform3i(mUniformLocations[uniform], input1, input2, input3); };
+void Shader::send4i(ShaderListEnum uniform, GLint input1, GLint input2, GLint input3, GLint input4) { glUniform4i(mUniformLocations[uniform], input1, input2, input3, input4); };
+void Shader::sendMatrix2fv(ShaderListEnum uniform, const glm::mat2 & inputMtx) { glUniformMatrix2fv(mUniformLocations[uniform], 1, GL_FALSE, glm::value_ptr(inputMtx)); };
+void Shader::sendMatrix3fv(ShaderListEnum uniform, const glm::mat3 & inputMtx) { glUniformMatrix3fv(mUniformLocations[uniform], 1, GL_FALSE, glm::value_ptr(inputMtx)); };
+void Shader::sendMatrix4fv(ShaderListEnum uniform, const glm::mat4 & inputMtx) { glUniformMatrix4fv(mUniformLocations[uniform], 1, GL_FALSE, glm::value_ptr(inputMtx)); };
