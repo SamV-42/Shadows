@@ -10,6 +10,8 @@ public:
   bool shouldClose();
 
   std::vector<std::string> readFile(const char* target);
+  static std::vector<std::string> splitLine(std::string line);
+  //convenience function often used with readFile, though not hardware-dependent
 
     //timer
     //Important note: Timer should be used after PlayerView is initialized

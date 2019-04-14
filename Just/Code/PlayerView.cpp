@@ -154,16 +154,14 @@ void PlayerView::initInitializeOpenGL() {
 
 void PlayerView::initLoadShaders() {
   auto shaderFile = Architecture::getInstance() .readFile("GameData/ShaderList.txt");
-  std::string values[3] = {};
   const std::string shader_location("Code/Shader/Shaders/");
   for(auto& line : shaderFile) {
-    std::stringstream splitline(line);
-    std::string split;
-    int i = 0;
-    while(std::getline(splitline, split, ' ')) {
-      values[i++] = shader_location + split;
+    std::vector<std::string> values = Architecture::getInstance() .splitLine(line);
+    values[0] = shader_location + values[0];
+    values[1] = shader_location + values[1];
+    if(values[2] != "NO_PATH") {
+      values[2] = shader_location + values[2];
     }
-    values[2] = ( (values[2] == shader_location + "NO_PATH") ? "NO_PATH" : values[2] );
     mShaders.push_back(Shader(values[0], values[1], values[2]));
     mModels.push_back(std::vector<ModelWrapper>());
   }
@@ -179,27 +177,18 @@ void PlayerView::initLoadShaders() {
 
 void PlayerView::initLoadModels() {
   auto modelsFile = Architecture::getInstance() .readFile("GameData/ModelList.txt");
-  GLfloat values[10] = {};
   const std::string models_location("Assets/");
   int firstIndex = 0;
   for(auto& line : modelsFile) {
-    std::stringstream splitline(line);
-    std::string split;
-    for(int i = 0; i < 10; ++i) {
-      std::getline(splitline, split, ' ');
-      values[i] = std::stod(split);
-    }
-    std::getline(splitline, split, ' ');
-    int modelShaderIndex = stoi(split);
-    std::getline(splitline, split, ' ');
-    std::string modelPath = "Assets/" + split;
+    std::vector<std::string> values = Architecture::getInstance() .splitLine(line);
 
     glm::mat4 initialModelMtx = glm::mat4(1.0f);
-    initialModelMtx = glm::scale(initialModelMtx, glm::vec3(values[7], values[8], values[9]));
-    initialModelMtx = glm::rotate(initialModelMtx, glm::radians(values[3]), glm::vec3(values[4], values[5], values[6]));
-    initialModelMtx = glm::translate(initialModelMtx, glm::vec3(values[0], values[1], values[2]));
+    initialModelMtx = glm::scale(initialModelMtx, glm::vec3(std::stof(values[7]), std::stof(values[8]), std::stof(values[9]) ));
+    initialModelMtx = glm::rotate(initialModelMtx, glm::radians(std::stof(values[3])), glm::vec3(std::stof(values[4]), std::stof(values[5]), std::stof(values[6])));
+    initialModelMtx = glm::translate(initialModelMtx, glm::vec3(std::stof(values[0]), std::stof(values[1]), std::stof(values[2])));
 
-    ModelWrapper model = ModelWrapper(modelPath, modelShaderIndex);
+    int modelShaderIndex = std::stoi(values[10]);
+    ModelWrapper model = ModelWrapper("Assets/" + values[11], modelShaderIndex);
     model.setModelMtx(initialModelMtx);
     mModels.at(modelShaderIndex).push_back(model);
     if(!firstIndex) {
