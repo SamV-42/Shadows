@@ -19,7 +19,11 @@ struct Material {
 };
 uniform Material material0;
 
-uniform vec3 viewPos;
+//uniform vec3 viewPos;
+
+layout (std140) uniform FragmentData {
+  vec3 viewPos;
+};
 
 in VS_TO_FS {
   vec2 TexCoord;

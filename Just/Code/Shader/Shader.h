@@ -8,19 +8,34 @@
 #include <iostream>
 #include <sstream>
 #include <cctype>
+#include <utility>
+#include <cstddef>
 
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
 
-#define SHADERLIST viewPos, material0, model, view, projection, transform
+#define SHADERLIST_UBO Matrices, FragmentData, pointLights
+enum ShaderListUBOEnum { SHADERLIST_UBO };
+
+#define SHADERLIST material0, model, view, projection, transform
+enum ShaderListEnum { SHADERLIST };
 //Outside classes can tell it, eg, shader.send3f(ShaderListEnum.viewPos, 1.0f,2.0f,3.0f);
 //  Define all uniforms across all shaders here -- getUniform returns -1 on 'not found', which is fine
 //  calls the appropriate glUniform function, which on -1 silently returns
-enum ShaderListEnum { SHADERLIST};
+
+
+
 
 class Shader {
 public:
+
+	static void initUBOBuffers();	//called in PlayerView.initBufferData
+	static void initUBO(ShaderListUBOEnum ubo, std::size_t size);
+	template <typename T>
+	static void loadUBO(ShaderListUBOEnum ubo, const T & value, size_t offset = 0);
+	//defined at the bottom of this header, because templates are apparently dumb
+
 	Shader(std::string vertex_path, std::string fragment_path);
 	Shader(std::string vertex_path, std::string fragment_path, std::string geometry_path);
 
@@ -43,9 +58,8 @@ public:
 	GLuint shaderProgram;
 
 	std::vector<GLint> mUniformLocations;
+	static std::vector<GLuint> sUBOLocations;
 	void loadUniformLocations();	//call AT THE END of the constructor! aka after shader is made!
-
-
 
 
 	//-------------------------------------------------------------------------------------------
@@ -56,9 +70,9 @@ public:
 	//stores in: 	std::vector<std::string> ShaderListString;
 	#define __SHADERLISTSTRINGS(x...) _SHADERLISTSTRINGS(x)
 	#define _SHADERLISTSTRINGS(x...) #x
-	#define SHADERLISTSTRINGS \
+	#define SHADERLISTSTRINGS(x...) \
 		{ \
-			std::stringstream splitline(__SHADERLISTSTRINGS(SHADERLIST)); \
+			std::stringstream splitline(__SHADERLISTSTRINGS(x)); \
 			std::string split; \
 			while(std::getline(splitline, split, ',')) { \
 				while(std::isspace(split.front())) { \
@@ -67,26 +81,38 @@ public:
 				while(std::isspace(split.back())) { \
 					split.erase(split.end()); \
 				} \
-				ShaderListString.push_back(split); \
+				ShaderLists.at(i).push_back(split); \
 			} \
+			i++; \
 		}
 
+public:
+
+private:
+
+	class StoopidSubClass {
 	public:
-
-	private:
-
-		class StoopidSubClass {
-		public:
-			std::vector<std::string> ShaderListString;
-			StoopidSubClass() {
-				SHADERLISTSTRINGS //( SHADERLIST ) ;
-			}
-		};
-
-		std::vector<std::string> & _stupidMacroSetupFunction() {
-			static StoopidSubClass ShaderListString;
-			return  ShaderListString.ShaderListString;
+		std::vector<std::vector<std::string> > ShaderLists;
+		StoopidSubClass() {
+			ShaderLists.push_back(std::vector<std::string>());
+			ShaderLists.push_back(std::vector<std::string>());
+			int i = 0;
+			SHADERLISTSTRINGS( SHADERLIST ) ;
+			SHADERLISTSTRINGS( SHADERLIST_UBO ) ;
 		}
+	};
+
+	std::vector<std::vector<std::string> > & _stupidMacroSetupFunction() {
+		static StoopidSubClass shaderListMaker;
+		return shaderListMaker.ShaderLists;
+	}
 };
+
+template <typename T>
+void Shader::loadUBO(ShaderListUBOEnum ubo, const T & value, std::size_t offset) {
+	glBindBuffer(GL_UNIFORM_BUFFER, sUBOLocations[ubo]);
+	glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(T), glm::value_ptr(value));
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
 
 #endif

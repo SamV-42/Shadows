@@ -131,13 +131,35 @@ void Shader::use() {
 
 
 void Shader::loadUniformLocations() {
-	std::vector<std::string> & ShaderListString = _stupidMacroSetupFunction();
-	for(auto& name : ShaderListString) {
+	std::vector<std::string> & shaderUniformList = _stupidMacroSetupFunction()[0];
+	for(auto& name : shaderUniformList) {
 		mUniformLocations.push_back(glGetUniformLocation(shaderProgram, name.c_str()));
 		//The C++ spec requires enums to start at 0 and go up by 1 each time
 		//so mUniformLocations[ShaderListEnum.viewPos] (for instance) should return the appropriate value
 	}
+	std::vector<std::string> & shaderUBOList = _stupidMacroSetupFunction()[1];
+	int i = 0;	//again, relying on ShaderListUBOEnum being sequential from 0
+	for(auto& name : shaderUBOList) {
+		GLuint index = glGetUniformBlockIndex(shaderProgram, name.c_str() );
+		glUniformBlockBinding(shaderProgram, index, i++);
+	}
+	sUBOLocations.reserve(i);	//later, capacity() will be used to be able to loop over the enum more easily
 }
+
+void Shader::initUBOBuffers() {	//static
+	for(int i = 0; i < sUBOLocations.capacity(); ++i) {	//don't fail me now, default enum ordering!
+		glGenBuffers(1, &sUBOLocations[i]);
+		glBindBufferBase(GL_UNIFORM_BUFFER, i, sUBOLocations[i]);
+	}
+}
+
+void Shader::initUBO(ShaderListUBOEnum ubo, std::size_t size) {
+	glBindBuffer(GL_UNIFORM_BUFFER, sUBOLocations[ubo]);
+	glBufferData(GL_UNIFORM_BUFFER, size, NULL, GL_STATIC_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
+std::vector<GLuint> Shader::sUBOLocations = std::vector<GLuint>();
 
 void Shader::send1f(ShaderListEnum uniform, GLfloat input1) { glUniform1f(mUniformLocations[uniform], input1);};
 void Shader::send2f(ShaderListEnum uniform, GLfloat input1, GLfloat input2) { glUniform2f(mUniformLocations[uniform], input1, input2); };

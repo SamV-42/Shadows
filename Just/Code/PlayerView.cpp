@@ -102,10 +102,7 @@ void PlayerView::updateView() {
     Shader & shader = mShaders.at(i);
     shader.use();
 
-    shader.send3f(ShaderListEnum::viewPos, camera->getCameraPos().x, camera->getCameraPos().y, camera->getCameraPos().z);
-    shader.sendMatrix4fv(ShaderListEnum::view, camera->getView());
-
-    shader.sendMatrix4fv(ShaderListEnum::projection, camera->getProj());
+    //shader.send3f(ShaderListEnum::viewPos, camera->getCameraPos().x, camera->getCameraPos().y, camera->getCameraPos().z);
     sendPointLights(&shader, 1.0f, 0.02, 0.003);
     glUniform1f(glGetUniformLocation(shader.getProgram(), "material0.shininess"), 64);
 
@@ -165,14 +162,14 @@ void PlayerView::initLoadShaders() {
     mShaders.push_back(Shader(values[0], values[1], values[2]));
     mModels.push_back(std::vector<ModelWrapper>());
   }
-
+/*
   std::vector<std::string> ubo_lists = {"Matrices", "viewPos", "pointLights"};  //C++11 only!
   for(int i = 0; i < ubo_lists.size(); ++i) {
     for(auto& shader : mShaders) {
       GLuint index = glGetUniformBlockIndex(shader.getProgram(), ubo_lists[i].c_str() );
       glUniformBlockBinding(shader.getProgram(), index, i);
     }
-  }
+  }*/
 }
 
 void PlayerView::initLoadModels() {
@@ -202,6 +199,16 @@ void PlayerView::initBufferData() {
   camera = new TargetCamera(glm::vec3(0.0f, 2.8f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT, mPlayer->getTranslation());
   camera->updatePlayerPosition();
   camera->updateView();
+
+  Shader::initUBOBuffers();
+
+  Shader::initUBO(ShaderListUBOEnum::FragmentData, sizeof(glm::vec3) );
+  Shader::loadUBO(ShaderListUBOEnum::FragmentData, camera->getCameraPos());
+
+  Shader::initUBO(ShaderListUBOEnum::Matrices, 2*sizeof(glm::mat4) );
+  Shader::loadUBO(ShaderListUBOEnum::Matrices, camera->getProj(), 0);
+  Shader::loadUBO(ShaderListUBOEnum::Matrices, camera->getView(), sizeof(glm::mat4));
+
 }
 
 void PlayerView::initInputOutput() {
