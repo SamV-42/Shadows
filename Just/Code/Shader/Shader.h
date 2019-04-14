@@ -39,7 +39,7 @@ public:
 	void sendMatrix3fv(ShaderListEnum uniform, const glm::mat3 & inputMtx);
 	void sendMatrix4fv(ShaderListEnum uniform, const glm::mat4 & inputMtx);
 
-private:
+public:
 	GLuint shaderProgram;
 
 	std::vector<GLint> mUniformLocations;

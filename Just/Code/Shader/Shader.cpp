@@ -139,7 +139,7 @@ void Shader::loadUniformLocations() {
 	}
 }
 
-void Shader::send1f(ShaderListEnum uniform, GLfloat input1) { glUniform1f(mUniformLocations[uniform], input1); };
+void Shader::send1f(ShaderListEnum uniform, GLfloat input1) { glUniform1f(mUniformLocations[uniform], input1);};
 void Shader::send2f(ShaderListEnum uniform, GLfloat input1, GLfloat input2) { glUniform2f(mUniformLocations[uniform], input1, input2); };
 void Shader::send3f(ShaderListEnum uniform, GLfloat input1, GLfloat input2, GLfloat input3) { glUniform3f(mUniformLocations[uniform], input1, input2, input3); };
 void Shader::send4f(ShaderListEnum uniform, GLfloat input1, GLfloat input2, GLfloat input3, GLfloat input4) { glUniform4f(mUniformLocations[uniform], input1, input2, input3, input4); };

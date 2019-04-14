@@ -1,6 +1,7 @@
 #include <cmath>
 #include <string>
 #include <sstream>
+#include <iomanip>
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -94,8 +95,10 @@ void PlayerView::updateView() {
   glClearColor(0.4f, 0.1f, 0.4f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
+
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
   for(int i = 0; i < mModels.size(); ++i) {
     Shader & shader = mShaders.at(i);
@@ -114,9 +117,28 @@ void PlayerView::updateView() {
       model.draw(&shader);
     }
   }//*/
-
-  //std::cout << mShaders.size() << std::endl;
-
+  /*for(auto& x : mModels[0][0].mModel.mMeshes[0].vertices) {
+    std::cout << x.Position.x << x.Position.y << x.Position.z << " ";
+  }
+  std::cout << "\n\n" << std::endl;*/
+  /*for(auto& s : mShaders) {
+    for(auto& i : s.mUniformLocations) {
+      std::cout << i << " ";
+    }
+    std::cout << "\n";
+  }
+  std::cout << "\n" << std::endl;*/
+  //std::cout << mModels.size() << "\t" << mModels[0].size() << "\t" << mModels[1].size() << std::endl;
+  //std::cout << camera->getCameraPos().x << "\t" << camera->getCameraPos().y << "\t" << camera->getCameraPos().z << std::endl;
+  std::cout << std::fixed;
+  std::cout << std::setprecision(2);
+  for(int i = 0; i < 4; ++i) {
+    for(int j = 0; j < 4; ++j) {
+      std::cout << camera->getView()[i][j] << "\t";
+    }
+    std::cout << "\n";
+  }
+  std::cout << mPlayer->getTranslation().x << " " << mPlayer->getTranslation().y << " " << mPlayer->getTranslation().z << std::endl;
   glfwSwapBuffers(mWindow);
 }
 
@@ -183,7 +205,7 @@ void PlayerView::initLoadModels() {
   auto modelsFile = Architecture::getInstance() .readFile("GameData/ModelList.txt");
   GLfloat values[10] = {};
   const std::string models_location("Assets/");
-  bool isFirst = true;
+  int firstIndex = 0;
   for(auto& line : modelsFile) {
     std::stringstream splitline(line);
     std::string split;
@@ -204,11 +226,11 @@ void PlayerView::initLoadModels() {
     ModelWrapper model = ModelWrapper(modelPath, modelShaderIndex);
     model.setModelMtx(initialModelMtx);
     mModels.at(modelShaderIndex).push_back(model);
-    if(isFirst) {
-      mPlayer = &mModels.at(modelShaderIndex).at(0);
+    if(!firstIndex) {
+      firstIndex = modelShaderIndex;
     }
-    isFirst = false;
   }
+  mPlayer = &(mModels.at(firstIndex).at(0));
 }
 
 void PlayerView::initBufferData() {
