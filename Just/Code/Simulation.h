@@ -1,9 +1,13 @@
-#ifndef SIMULATION_HPP
-#define SIMULATION_HPP
+#ifndef SIMULATION_H
+#define SIMULATION_H
 
 #include <vector>
 #include <memory>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "PlayerView.h"
 #include "Physics/Octree.h"
 
 class Simulation {
@@ -13,7 +17,7 @@ public:
     double percentForward; // -1 to 1
     double angle; // world-relative, measured in radians
   };
-  SimulationPlayerInput mInput1;
+  SimulationPlayerInput mInput1;  //please, only PlayerView touches this, during respondToEvents
 
   void initialize();
 

@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <cmath>
 
 void Simulation::initialize() {
   auto AABBFile = Architecture::getInstance() .readFile("GameData/AABBList.txt");
@@ -27,6 +28,26 @@ void Simulation::initialize() {
 }
 
 void Simulation::update() {
+
+  glm::vec3 translation( sin(mInput1.angle)*mInput1.percentForward, 0.0f, cos(mInput1.angle)*mInput1.percentForward );
+  translation *= glm::vec3(10.0f * Architecture::getInstance().getDt() );
+  PlayerView::getInstance() .mPlayer->translate(translation);
+
+  glm::vec3 currentTrans = PlayerView::getInstance() .mPlayer->getTranslation();
+  //std::cout << currentTrans.x << " " << currentTrans.y << " " << currentTrans.z << std::endl;
+  AABB playerAABB(currentTrans.x, currentTrans.y, currentTrans.z, 0.35f, 0.12f, 0.12f);
+
+  //std::cout << (AABB::intersectAABB(*mAABBList[5], playerAABB) ? "yes" : "no") << std::endl;
+  //mOctree->testingPrint();
+  //std::cout << std::endl;
+
+  if(mOctree->checkCollision(playerAABB) != nullptr) {
+    //mOctree->checkCollision(playerAABB)->testingPrint(); std::cout << std::endl;
+    //playerAABB.testingPrint();std::cout << std::endl; std::cout << std::endl;
+    translation *= glm::vec3(-1);
+    PlayerView::getInstance() .mPlayer->translate(translation);
+  }
+
   //<<<>>> Update all entities, handle collisions, etc.
   //Store relevant data in a playerView-accessible place somehow
 }

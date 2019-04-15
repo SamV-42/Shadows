@@ -100,14 +100,15 @@ std::shared_ptr<AABB> Octree::checkCollision(AABB & aabb) {
       }
     }
   } else {
-    /*for(int i = 0; i < 8; ++i) {  //replace this, we can do it more efficiently
+    for(int i = 0; i < 8; ++i) {  //replace this, we can do it more efficiently
       if(mNodes[i]->mBoundary.intersect(aabb)) {
         std::shared_ptr<AABB> result = mNodes[i]->checkCollision(aabb);
         if(result != nullptr) {
           return result;
         }
       }
-    }*/
+    }
+    /*
     unsigned char enabled = 0xFF;
     unsigned char left = aabb.getMinX() > mBoundary.getCenterX() ? 0x55 : 0xFF; // 0101 0101 - turn off 1357
     unsigned char right = aabb.getMaxX() < mBoundary.getCenterX() ? 0xAA : 0xFF; // 1010 1010 - turn off 0246
@@ -117,16 +118,21 @@ std::shared_ptr<AABB> Octree::checkCollision(AABB & aabb) {
     unsigned char back = aabb.getMaxZ() < mBoundary.getCenterZ() ? 0x0F : 0xFF; // 0000 1111 - turn off 4567
     enabled = enabled & left & right & top & bottom & front & back;
 
-    //std::cout << "HI|" << std::endl << std::hex << (int)enabled << std::endl;
+    std::cout << "HI|" << std::endl << std::hex << (int)enabled << std::endl;
 
     for(int i = 0; i < 8; ++i) {
-      if(enabled & (0x01 << i) != 0x00) {
+      //std::cout << (0x01 << i) << "\t" << ((enabled & (0x01 << i)) ? "yes" : "no") << std::endl;
+      if(enabled & (0x01 << i)) {
         std::shared_ptr<AABB> result = mNodes[i]->checkCollision(aabb);
+        std::cout << "node" << i << std::endl;
+        mNodes[i]->mBoundary.testingPrint(); std::cout << std::endl;
         if(result != nullptr) {
           return result;
         }
       }
     }
+    std::cout << std::endl << std::endl << std::endl;
+    */
   }
   return nullptr;
 }

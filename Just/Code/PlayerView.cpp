@@ -20,8 +20,8 @@
 #include "Architecture.h"
 #include "Display/ModelWrapper.h"
 
-const GLuint WIDTH = 1200;
-const GLuint HEIGHT = 800;
+const GLuint WIDTH = 400;
+const GLuint HEIGHT = 300;
 
 
 void PlayerView::initialize() {
@@ -46,7 +46,7 @@ void PlayerView::respondToEvents() {
 
   shouldCloseVariable = keys[GLFW_KEY_ESCAPE];
 
-  double fb = keys[GLFW_KEY_W] - keys[GLFW_KEY_S];
+  double fb = keys[GLFW_KEY_S] - keys[GLFW_KEY_W];
   double rl = keys[GLFW_KEY_D] - keys[GLFW_KEY_A];
 
   double speed = (1 - mSlow * 0.5) * (fb == rl ? abs(fb) : 1);
@@ -68,8 +68,6 @@ void PlayerView::updateView() {
     Shader & shader = mShaders.at(i);
     shader.use();
 
-    //shader.send3f(ShaderListEnum::viewPos, camera->getCameraPos().x, camera->getCameraPos().y, camera->getCameraPos().z);
-    //sendPointLights(&shader, 1.0f, 0.02, 0.003);
     glUniform1f(glGetUniformLocation(shader.getProgram(), "material0.shininess"), 64);
 
     for(auto& model : mModels.at(i)) {
@@ -128,14 +126,6 @@ void PlayerView::initLoadShaders() {
     mShaders.push_back(Shader(values[0], values[1], values[2]));
     mModels.push_back(std::vector<ModelWrapper>());
   }
-/*
-  std::vector<std::string> ubo_lists = {"Matrices", "viewPos", "pointLights"};  //C++11 only!
-  for(int i = 0; i < ubo_lists.size(); ++i) {
-    for(auto& shader : mShaders) {
-      GLuint index = glGetUniformBlockIndex(shader.getProgram(), ubo_lists[i].c_str() );
-      glUniformBlockBinding(shader.getProgram(), index, i);
-    }
-  }*/
 }
 
 void PlayerView::initLoadModels() {

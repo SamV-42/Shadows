@@ -15,6 +15,8 @@
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 
 #define SHADERLIST_UBO Matrices, FragmentData, PointLights
 enum ShaderListUBOEnum { SHADERLIST_UBO };
@@ -116,7 +118,6 @@ private:
 
 template <typename T>
 void Shader::loadUBO(ShaderListUBOEnum ubo, const T & value, std::size_t offset) {
-	std::cout << "T: " << sizeof(T) << std::endl;
 	glBindBuffer(GL_UNIFORM_BUFFER, sUBOLocations[ubo]);
 	glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(T), glm::value_ptr(value));
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);

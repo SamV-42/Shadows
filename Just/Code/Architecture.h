@@ -1,5 +1,5 @@
-#ifndef ARCHITECTURE_HPP
-#define ARCHITECTURE_HPP
+#ifndef ARCHITECTURE_H
+#define ARCHITECTURE_H
 
 #include <vector>
 #include <string>

@@ -161,8 +161,6 @@ void Shader::initUBO(ShaderListUBOEnum ubo, std::size_t size) {
 
 template<>
 void Shader::loadUBO<GLint>(ShaderListUBOEnum ubo, const GLint & value, std::size_t offset) {
-	std::cout << "I: " << sizeof(GLint) << std::endl;
-
 	glBindBuffer(GL_UNIFORM_BUFFER, sUBOLocations[ubo]);
 	glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(GLint), &value);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -170,8 +168,6 @@ void Shader::loadUBO<GLint>(ShaderListUBOEnum ubo, const GLint & value, std::siz
 
 template<>
 void Shader::loadUBO<GLfloat>(ShaderListUBOEnum ubo, const GLfloat & value, std::size_t offset) {
-	std::cout << "F: " << sizeof(GLfloat) << std::endl;
-
 	glBindBuffer(GL_UNIFORM_BUFFER, sUBOLocations[ubo]);
 	glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(GLfloat), &value);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);

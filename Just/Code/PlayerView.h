@@ -1,5 +1,5 @@
-#ifndef PLAYERVIEW_HPP
-#define PLAYERVIEW_HPP
+#ifndef PLAYERVIEW_H
+#define PLAYERVIEW_H
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -21,6 +21,9 @@ public:
   void updateView();
 
   void shutdown();
+
+  ModelWrapper * mPlayer;
+  //  we need a longer-term solution for how Simulation can move things, but for now just the player is fine
 
 private:
 
@@ -62,7 +65,6 @@ private:
   //Display
 
   bool mSlow = false;
-  ModelWrapper * mPlayer;
 
   TargetCamera * camera;
 
