@@ -46,6 +46,8 @@ private:
 
   void initFramebuffers();
 
+  void initShameful();
+
 //-----------------------------------------------------------------------------------
 //Input
 
@@ -77,8 +79,14 @@ private:
   GLuint fboMultisample, fboIntermediate;
   GLuint outputTexture;
 
+  //-----------------------------------------------------------------------------------
+  //Shameful -- anything that ought to be handled more elegantly at some point in the future
+
   GLuint stupidMeshVAO;
   void setupStupidMesh();
+  GLuint cubemapTexture;
+  GLuint cubemapVAO;
+  void setupCubemap();
 
 //-----------------------------------------------------------
 //Singleton implementation below:

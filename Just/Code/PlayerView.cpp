@@ -34,6 +34,7 @@ void PlayerView::initialize() {
   initLoadModels();
   initBufferData();      //a few uniforms/UBOs, Camera
   initFramebuffers();
+  initShameful();
   //note that for now, we're just going to try to keep everything in memory
   //so no more streaming in new significant data, it's all in the heap or buffers somewhere
 }
@@ -79,6 +80,17 @@ void PlayerView::updateView() {
       model.draw(&shader);
     }
   }
+
+  mShaders.at(2).use();
+  glDepthFunc(GL_LEQUAL);
+  glm::mat4 temp_c_view = glm::mat4(glm::mat3(camera->getView()));
+  mShaders.at(2).sendMatrix4fv(ShaderListEnum::modifiedView, temp_c_view);
+  glBindVertexArray(cubemapVAO);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+  glDrawArrays(GL_TRIANGLES, 0, 36);
+  glBindVertexArray(0);
+  glDepthFunc(GL_LESS);
 
 
   glBindFramebuffer(GL_READ_FRAMEBUFFER, fboMultisample);
@@ -263,8 +275,6 @@ void PlayerView::initFramebuffers() {
     ERROR_LOG << "ERROR::PLAYERVIEW::initFramebuffers FBO 2 failed to complete" << std::endl;
   }
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-  setupStupidMesh();  //I swear I'll put this in data at some point
 }
 
 
@@ -309,9 +319,13 @@ bool PlayerView::shouldCloseVariable = false;
 bool PlayerView::keys[512] = {};
 double PlayerView::dx = 0;
 double PlayerView::dy = 0;
+//Shameful below ---------------------------------------------------------------------
+void PlayerView::initShameful() {
+  setupStupidMesh();
+  setupCubemap();
+}
 
-
-void PlayerView::setupStupidMesh() {
+void PlayerView::setupStupidMesh() {  //put this in data!
   mShaders.at(1).use();
   glGenVertexArrays(1, &stupidMeshVAO);
   GLuint VBO; glGenBuffers(1, &VBO);
@@ -328,5 +342,103 @@ void PlayerView::setupStupidMesh() {
 
       glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*2, (GLvoid*)0);
       glEnableVertexAttribArray(0);
+  glBindVertexArray(0);
+}
+
+void PlayerView::setupCubemap() {
+  glGenTextures(1, &cubemapTexture);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+  int a_width, a_height;
+  unsigned char* a_image;
+  std::vector<std::string> textures_faces;
+  textures_faces.push_back("Assets/cube1/right.jpg");
+  textures_faces.push_back("Assets/cube1/left.jpg");
+  textures_faces.push_back("Assets/cube1/top.jpg");
+  textures_faces.push_back("Assets/cube1/bottom.jpg");
+  textures_faces.push_back("Assets/cube1/back.jpg");
+  textures_faces.push_back("Assets/cube1/front.jpg");
+
+  for(GLuint i = 0; i < textures_faces.size(); ++i) {
+    a_image = SOIL_load_image(textures_faces[i].c_str(), &a_width, &a_height, 0, SOIL_LOAD_RGB);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, a_width, a_height, 0, GL_RGB, GL_UNSIGNED_BYTE, a_image);
+  }
+
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+  SOIL_free_image_data(a_image);
+
+
+
+  GLfloat skyboxVertices[] = {
+      // positions
+      -1.0f,  1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+      -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+       1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+
+       1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+       1.0f,  1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+       -1.0f,  1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+
+
+      -1.0f, -1.0f,  1.0f, -1.0f, 0.0f, 0.0f,
+      -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f,
+      -1.0f,  1.0f, -1.0f, -1.0f, 0.0f, 0.0f,
+
+      -1.0f,  1.0f, -1.0f, -1.0f, 0.0f, 0.0f,
+      -1.0f,  1.0f,  1.0f, -1.0f, 0.0f, 0.0f,
+      -1.0f, -1.0f,  1.0f, -1.0f, 0.0f, 0.0f,
+
+
+       1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f,
+       1.0f, -1.0f,  1.0f, 1.0f, 0.0f, 0.0f,
+       1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 0.0f,
+
+       1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 0.0f,
+       1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 0.0f,
+       1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f,
+
+
+      -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+       -1.0f,  1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+       1.0f,  1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+
+       1.0f,  1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+      1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+      -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+
+
+      -1.0f,  1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+       1.0f,  1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+       1.0f,  1.0f,  1.0f, 0.0f, 1.0f, 0.0f,
+
+       1.0f,  1.0f,  1.0f, 0.0f, 1.0f, 0.0f,
+      -1.0f,  1.0f,  1.0f, 0.0f, 1.0f, 0.0f,
+      -1.0f,  1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+
+
+      -1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f,
+       -1.0f, -1.0f,  1.0f, 0.0f, -1.0f, 0.0f,
+       1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f,
+
+       1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f,
+       -1.0f, -1.0f,  1.0f, 0.0f, -1.0f, 0.0f,
+       1.0f, -1.0f,  1.0f, 0.0f, -1.0f, 0.0f
+  };
+
+  glGenVertexArrays(1, &cubemapVAO);
+  GLuint cube_vbo;
+  glGenBuffers(1, &cube_vbo);
+
+  glBindVertexArray(cubemapVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, cube_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0 );
+  glEnableVertexAttribArray(0);
+
   glBindVertexArray(0);
 }
