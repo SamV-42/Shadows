@@ -23,7 +23,7 @@ Mesh::Mesh(std::vector<Vertex> & vertices_, std::vector<GLuint> & indices_, std:
       glEnableVertexAttribArray(2);
   glBindVertexArray(0);
 }
-#include <iostream>
+
 void Mesh::Draw(Shader* shader) {
     int diffuseNr = 0;
     int specularNr = 0;

@@ -21,7 +21,7 @@
 #define SHADERLIST_UBO Matrices, FragmentData, PointLights
 enum ShaderListUBOEnum { SHADERLIST_UBO };
 
-#define SHADERLIST material0, model, view, projection, transform
+#define SHADERLIST material0, model, view, projection, transform, texture1
 enum ShaderListEnum { SHADERLIST };
 //Outside classes can tell it, eg, shader.send3f(ShaderListEnum.viewPos, 1.0f,2.0f,3.0f);
 //  Define all uniforms across all shaders here -- getUniform returns -1 on 'not found', which is fine

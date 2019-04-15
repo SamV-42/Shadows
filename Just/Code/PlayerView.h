@@ -44,6 +44,8 @@ private:
 
   void initInputOutput();
 
+  void initFramebuffers();
+
 //-----------------------------------------------------------------------------------
 //Input
 
@@ -72,6 +74,11 @@ private:
   std::vector<GLuint> mUniformBuffers;
   std::vector<std::vector<ModelWrapper> > mModels;  //draw models with the same shader together
 
+  GLuint fboMultisample, fboIntermediate;
+  GLuint outputTexture;
+
+  GLuint stupidMeshVAO;
+  void setupStupidMesh();
 
 //-----------------------------------------------------------
 //Singleton implementation below:

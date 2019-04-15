@@ -33,6 +33,7 @@ void PlayerView::initialize() {
   initLoadShaders();
   initLoadModels();
   initBufferData();      //a few uniforms/UBOs, Camera
+  initFramebuffers();
   //note that for now, we're just going to try to keep everything in memory
   //so no more streaming in new significant data, it's all in the heap or buffers somewhere
 }
@@ -58,6 +59,8 @@ void PlayerView::respondToEvents() {
 
 //BEACON
 void PlayerView::updateView() {
+  glBindFramebuffer(GL_FRAMEBUFFER, fboMultisample);
+
   glClearColor(0.4f, 0.1f, 0.4f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -76,6 +79,27 @@ void PlayerView::updateView() {
       model.draw(&shader);
     }
   }
+
+
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, fboMultisample);
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboIntermediate);
+  glBlitFramebuffer(0,0,WIDTH, HEIGHT, 0,0,WIDTH, HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  mShaders.at(1).use();
+
+  glClearColor(0.5f, 0.2f, 0.2f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glDisable(GL_DEPTH_TEST);
+
+
+  glActiveTexture(GL_TEXTURE0);
+  mShaders.at(1).send1i(ShaderListEnum::texture1, 0);   //not actually needed
+  glBindVertexArray(stupidMeshVAO);
+  glBindTexture(GL_TEXTURE_2D, outputTexture);
+  glDrawElements( GL_TRIANGLES, 6,  GL_UNSIGNED_INT, 0);
+  glBindVertexArray(0);
+
   glfwSwapBuffers(mWindow);
 }
 
@@ -199,6 +223,51 @@ void PlayerView::initBufferData() {
   Shader::loadUBO(ShaderListUBOEnum::PointLights, (GLint)(pointLightsList.size()), 10*pointLightSize);
 }
 
+void PlayerView::initFramebuffers() {
+  glGenFramebuffers(1, &fboMultisample);
+  glBindFramebuffer(GL_FRAMEBUFFER, fboMultisample);
+
+  GLuint fbotext1;
+  glGenTextures(1, &fbotext1);
+  glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, fbotext1);
+  //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, WIDTH, HEIGHT, GL_TRUE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, fbotext1, 0);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  GLuint rbo;
+  glGenRenderbuffers(1, &rbo);
+  glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+  glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+  glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    ERROR_LOG << "ERROR::PLAYERVIEW::initFramebuffers FBO 1 failed to complete" << std::endl;
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  glGenFramebuffers(1, &fboIntermediate);
+  glBindFramebuffer(GL_FRAMEBUFFER, fboIntermediate);
+
+  glGenTextures(1, &outputTexture);
+  glBindTexture(GL_TEXTURE_2D, outputTexture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, outputTexture, 0);
+  glBindTexture(GL_TEXTURE_2D, 0);
+  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    ERROR_LOG << "ERROR::PLAYERVIEW::initFramebuffers FBO 2 failed to complete" << std::endl;
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  setupStupidMesh();  //I swear I'll put this in data at some point
+}
+
+
 void PlayerView::clbkKey(GLFWwindow* window, int key, int scancode, int action, int mode) {
   if(action == GLFW_PRESS) {
     keys[key] = true;
@@ -240,3 +309,24 @@ bool PlayerView::shouldCloseVariable = false;
 bool PlayerView::keys[512] = {};
 double PlayerView::dx = 0;
 double PlayerView::dy = 0;
+
+
+void PlayerView::setupStupidMesh() {
+  mShaders.at(1).use();
+  glGenVertexArrays(1, &stupidMeshVAO);
+  GLuint VBO; glGenBuffers(1, &VBO);
+  GLuint EBO; glGenBuffers(1, &EBO);
+
+  GLfloat vertices[] = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f };
+  GLuint indices[] = { 0, 2, 1, 0, 3, 2 };
+
+  glBindVertexArray(stupidMeshVAO);
+      glBindBuffer(GL_ARRAY_BUFFER, VBO);
+      glBufferData(GL_ARRAY_BUFFER, 8*sizeof(GLfloat), vertices, GL_STATIC_DRAW);
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+      glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6*sizeof(GLuint), indices, GL_STATIC_DRAW);
+
+      glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*2, (GLvoid*)0);
+      glEnableVertexAttribArray(0);
+  glBindVertexArray(0);
+}
