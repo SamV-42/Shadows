@@ -22,6 +22,7 @@ public:
   glm::mat4 getProj() const;
 
   glm::vec3 & getCameraPos();
+  glm::vec3 & getCameraFront();
 
   void setCameraPos(const glm::vec3 & _CameraPos);
   void setCameraFront(const glm::vec3 & _CameraFront);

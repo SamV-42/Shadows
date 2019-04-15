@@ -23,6 +23,7 @@ public:
   void shutdown();
 
   ModelWrapper * mPlayer;
+  BaseCamera * camera;
   //  we need a longer-term solution for how Simulation can move things, but for now just the player is fine
 
 private:
@@ -70,7 +71,7 @@ private:
 
   bool mSlow = false;
 
-  TargetCamera * camera;
+  //BaseCamera * camera;
 
   std::vector<Shader> mShaders;
   std::vector<GLuint> mUniformBuffers;

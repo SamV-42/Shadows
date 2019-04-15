@@ -48,18 +48,24 @@ void PlayerView::respondToEvents() {
 
   shouldCloseVariable = keys[GLFW_KEY_ESCAPE];
 
-  double fb = keys[GLFW_KEY_S] - keys[GLFW_KEY_W];
-  double rl = keys[GLFW_KEY_D] - keys[GLFW_KEY_A];
+  double fb = keys[GLFW_KEY_W] - keys[GLFW_KEY_S];
+  double rl = keys[GLFW_KEY_A] - keys[GLFW_KEY_D];
 
-  double speed = (1 - mSlow * 0.5) * (fb == rl ? abs(fb) : 1);
-  double angle = atan2(rl, fb);  //reversed so forward is 0, clockwise is positive
+  //double speed = (1 - mSlow * 0.5) * (fb == rl ? abs(fb) : 1);
+  //double angle = atan2(rl, fb);  //reversed so forward is 0, clockwise is positive
 
-  Simulation::getInstance() .mInput1.percentForward = speed;
-  Simulation::getInstance() .mInput1.angle = angle;
+  Simulation::getInstance() .mInput1.percentForward = fb; //speed;
+  Simulation::getInstance() .mInput1.percentStrafe  = rl; //angle;
+  Simulation::getInstance() .mInput1.dx = getDx();
+  Simulation::getInstance() .mInput1.dy = getDy();
+
 }
 
 //BEACON
 void PlayerView::updateView() {
+  camera->updateView();
+  Shader::loadUBO(ShaderListUBOEnum::Matrices, camera->getView(), sizeof(glm::mat4));
+
   glBindFramebuffer(GL_FRAMEBUFFER, fboMultisample);
 
   glClearColor(0.4f, 0.1f, 0.4f, 1.0f);
@@ -188,8 +194,8 @@ void PlayerView::initLoadModels() {
 }
 
 void PlayerView::initBufferData() {
-  camera = new TargetCamera(glm::vec3(0.0f, 2.8f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT, mPlayer->getTranslation());
-  camera->updatePlayerPosition();
+  camera = new BaseCamera(glm::vec3(0.0f, 0.0f, -2.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), WIDTH, HEIGHT);
+  //camera->updatePlayerPosition();
   camera->updateView();
 
   Shader::initUBOBuffers();
@@ -319,6 +325,9 @@ bool PlayerView::shouldCloseVariable = false;
 bool PlayerView::keys[512] = {};
 double PlayerView::dx = 0;
 double PlayerView::dy = 0;
+//double PlayerView::pitch = 0;
+//double PlayerView::yaw = 0;
+
 //Shameful below ---------------------------------------------------------------------
 void PlayerView::initShameful() {
   setupStupidMesh();

@@ -11,6 +11,7 @@ BaseCamera::BaseCamera(glm::vec3 _cameraPos, glm::vec3 _cameraFront, glm::vec3 _
 	mCameraUp = _cameraUp;
 
 	mProjection = glm::perspective(glm::radians(45.0f), (float)kWidth / (float)kHeight, 0.1f, 100.0f);
+	mDirty = true;
 }
 
 void BaseCamera::updateView() {
@@ -53,4 +54,8 @@ void BaseCamera::setCameraUp(const glm::vec3 & _CameraUp) {
 
 glm::vec3 & BaseCamera::getCameraPos() {
 	return mCameraPos;
+}
+
+glm::vec3 & BaseCamera::getCameraFront() {
+	return mCameraFront;
 }

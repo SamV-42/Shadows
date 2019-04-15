@@ -29,24 +29,41 @@ void Simulation::initialize() {
 
 void Simulation::update() {
 
-  glm::vec3 translation( sin(mInput1.angle)*mInput1.percentForward, 0.0f, cos(mInput1.angle)*mInput1.percentForward );
-  translation *= glm::vec3(10.0f * Architecture::getInstance().getDt() );
-  PlayerView::getInstance() .mPlayer->translate(translation);
+  const double sensitivity = 5.0f;
 
-  glm::vec3 currentTrans = PlayerView::getInstance() .mPlayer->getTranslation();
-  //std::cout << currentTrans.x << " " << currentTrans.y << " " << currentTrans.z << std::endl;
-  AABB playerAABB(currentTrans.x, currentTrans.y, currentTrans.z, 0.35f, 0.12f, 0.12f);
+  static double pitch = 0;
+  static double yaw = 0;
 
-  //std::cout << (AABB::intersectAABB(*mAABBList[5], playerAABB) ? "yes" : "no") << std::endl;
-  //mOctree->testingPrint();
-  //std::cout << std::endl;
+  yaw += sensitivity * mInput1.dx * Architecture::getInstance().getDt();
+  pitch -= sensitivity * mInput1.dy * Architecture::getInstance().getDt();
+  if(pitch > 89.0f) pitch = 89.0f; if(pitch < -89.0f) pitch = -89.0f;
+  glm::vec3 direction;
+  direction.x = cos(glm::radians(pitch))*cos(glm::radians(yaw));
+  direction.y = sin(glm::radians(pitch));
+  direction.z = cos(glm::radians(pitch))*sin(glm::radians(yaw));
+  direction = glm::normalize(direction);
+  PlayerView::getInstance() .camera->setCameraFront(direction);
+
+  direction.y = 0;
+  glm::vec3 strafeDir = glm::vec3(direction.z, 0.0f, -direction.x);
+  direction *= mInput1.percentForward;
+  strafeDir *= mInput1.percentStrafe;
+
+  direction = direction + strafeDir;
+  if(mInput1.percentForward || mInput1.percentStrafe) {
+    direction = glm::normalize(direction);
+  }
+  direction *= 10.0f * Architecture::getInstance().getDt();
+  glm::vec3 cameraPos = PlayerView::getInstance() .camera->getCameraPos();
+  cameraPos += direction;
+
+  AABB playerAABB(cameraPos.x, cameraPos.y, cameraPos.z, 0.35f, 1.0f, 0.12f);
 
   if(mOctree->checkCollision(playerAABB) != nullptr) {
-    //mOctree->checkCollision(playerAABB)->testingPrint(); std::cout << std::endl;
-    //playerAABB.testingPrint();std::cout << std::endl; std::cout << std::endl;
-    translation *= glm::vec3(-1);
-    PlayerView::getInstance() .mPlayer->translate(translation);
+    cameraPos -= direction;
   }
+
+  PlayerView::getInstance() .camera->setCameraPos(cameraPos);
 
   //<<<>>> Update all entities, handle collisions, etc.
   //Store relevant data in a playerView-accessible place somehow

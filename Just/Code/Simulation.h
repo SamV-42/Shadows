@@ -15,7 +15,9 @@ public:
 
   struct SimulationPlayerInput {
     double percentForward; // -1 to 1
-    double angle; // world-relative, measured in radians
+    double percentStrafe; // world-relative, measured in radians
+    double dx;
+    double dy;
   };
   SimulationPlayerInput mInput1;  //please, only PlayerView touches this, during respondToEvents
 
