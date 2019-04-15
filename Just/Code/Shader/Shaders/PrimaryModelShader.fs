@@ -5,12 +5,17 @@ struct PointLight {
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
+
 	float constant;
 	float linear;
 	float quadratic;
 };
-#define NR_POINT_LIGHTS 4
-uniform PointLight pointLights[NR_POINT_LIGHTS];
+
+#define NR_POINT_LIGHTS 10
+layout (std140) uniform PointLights {
+  PointLight pointLights[NR_POINT_LIGHTS];
+  int numLights;
+};
 
 struct Material {
 	sampler2D texture_diffuse;
@@ -18,8 +23,6 @@ struct Material {
 	float shininess;
 };
 uniform Material material0;
-
-//uniform vec3 viewPos;
 
 layout (std140) uniform FragmentData {
   vec3 viewPos;
@@ -61,10 +64,9 @@ void main()
     vec3 viewDir = normalize(viewPos - vs_to_fs_var2.FragPos);
 
     output = vec3(0.0f);
-    for(int i = 0; i < NR_POINT_LIGHTS; ++i) {
+    for(int i = 0; i < numLights; ++i) {
         output += point_Lighting(pointLights[i], norm, vs_to_fs_var2.FragPos, viewDir);
     }
 
     color = vec4(output, 1.0f);
-    //color = vec4(0.5f, 0.5f, 0.5f, 1.0f);
 }

@@ -33,7 +33,6 @@ void PlayerView::initialize() {
   initLoadShaders();
   initLoadModels();
   initBufferData();      //a few uniforms/UBOs, Camera
-  initInputOutput();      //
   //note that for now, we're just going to try to keep everything in memory
   //so no more streaming in new significant data, it's all in the heap or buffers somewhere
 }
@@ -56,39 +55,6 @@ void PlayerView::respondToEvents() {
   Simulation::getInstance() .mInput1.percentForward = speed;
   Simulation::getInstance() .mInput1.angle = angle;
 }
-///*
-const static int tmp_numPointLights = 4;
-static glm::vec3 tmp_pointLights[] = {
-		glm::vec3(  5, 0, 7  ),
-		glm::vec3(  2, 0, 3  ),
-		glm::vec3(  4, 0, -6  ),
-		glm::vec3(  0, 0, 8  )
-	};
-void sendPointLights(Shader* default_shader, GLfloat atn_c = 1.0f, GLfloat atn_l = 0.05f, GLfloat atn_q = 0.001f) {
-	std::string tempPlace = "pointLights[X].";
-	for(int i = 0; i < tmp_numPointLights; ++i) {	//int i = 0; i < light.translations.size(); ++i
-		tempPlace[12] = (char)('0' + i);
-		GLint lightPosLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "position").c_str() );
-		glUniform3f(lightPosLoc, tmp_pointLights[i].x, tmp_pointLights[i].y, tmp_pointLights[i].z);
-		GLint lightConstantLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "constant").c_str() );
-		glUniform1f(lightConstantLoc, atn_c);
-		GLint lightLinearLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "linear").c_str() );
-		glUniform1f(lightLinearLoc, atn_l);
-		GLint lightQuadraticLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "quadratic").c_str() );
-		glUniform1f(lightQuadraticLoc, atn_q);
-
-    glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-	GLint lightAmbientLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "ambient").c_str() );
-	GLint lightDiffuseLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "diffuse").c_str() );
-	GLint lightSpecularLoc = glGetUniformLocation(default_shader->getProgram(), (tempPlace + "specular").c_str() );
-	glm::vec3 lightAmbient = lightColor * glm::vec3(0.05f);
-	glUniform3f(lightAmbientLoc, lightAmbient.x, lightAmbient.y, lightAmbient.z);
-	glm::vec3 lightDiffuse = lightColor * glm::vec3(0.5f);
-	glUniform3f(lightDiffuseLoc, lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
-	glUniform3f(lightSpecularLoc, lightColor.x, lightColor.y, lightColor.z);
-
-	}
-}//*/
 
 //BEACON
 void PlayerView::updateView() {
@@ -103,7 +69,7 @@ void PlayerView::updateView() {
     shader.use();
 
     //shader.send3f(ShaderListEnum::viewPos, camera->getCameraPos().x, camera->getCameraPos().y, camera->getCameraPos().z);
-    sendPointLights(&shader, 1.0f, 0.02, 0.003);
+    //sendPointLights(&shader, 1.0f, 0.02, 0.003);
     glUniform1f(glGetUniformLocation(shader.getProgram(), "material0.shininess"), 64);
 
     for(auto& model : mModels.at(i)) {
@@ -203,16 +169,44 @@ void PlayerView::initBufferData() {
   Shader::initUBOBuffers();
 
   Shader::initUBO(ShaderListUBOEnum::FragmentData, sizeof(glm::vec3) );
-  Shader::loadUBO(ShaderListUBOEnum::FragmentData, camera->getCameraPos());
+  Shader::loadUBO(ShaderListUBOEnum::FragmentData, camera->getCameraPos(), 0);
 
   Shader::initUBO(ShaderListUBOEnum::Matrices, 2*sizeof(glm::mat4) );
   Shader::loadUBO(ShaderListUBOEnum::Matrices, camera->getProj(), 0);
   Shader::loadUBO(ShaderListUBOEnum::Matrices, camera->getView(), sizeof(glm::mat4));
 
-}
+  const int maxPointLights = 10;
+  std::vector<glm::vec3> pointLightsList {  //new vector declaration in C++11
+  		glm::vec3(  5, 0, 7  ),
+  		glm::vec3(  2, 0, 3  ),
+  		glm::vec3(  4, 0, -6  ),
+  		glm::vec3(  0, 0, 8  )
+  	};
 
-void PlayerView::initInputOutput() {
-  //<<<>>>
+  //Note: All the below offsets are predicted by std140. And verified by me after much frustration.
+  std::size_t pointLightSize = 80;
+  Shader::initUBO(ShaderListUBOEnum::PointLights, 850 );  //little extra in case
+  for(int i = 0; i < pointLightsList.size(); ++i) {
+    Shader::loadUBO(ShaderListUBOEnum::PointLights, pointLightsList[i], i*pointLightSize);
+
+    glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 lightAmbient = lightColor * glm::vec3(0.05f);
+    glm::vec3 lightDiffuse = lightColor * glm::vec3(0.5f);
+    glm::vec3 lightSpecular = lightColor;
+
+    Shader::loadUBO(ShaderListUBOEnum::PointLights, lightAmbient,  16 + i*pointLightSize);
+    Shader::loadUBO(ShaderListUBOEnum::PointLights, lightDiffuse,  32 + i*pointLightSize);
+    Shader::loadUBO(ShaderListUBOEnum::PointLights, lightSpecular, 48 + i*pointLightSize);
+
+    GLfloat atn_c = 1.0f;
+    GLfloat atn_l = 0.05f;
+    GLfloat atn_q = 0.001f;
+
+    Shader::loadUBO(ShaderListUBOEnum::PointLights, atn_c, 60 + i*pointLightSize);
+    Shader::loadUBO(ShaderListUBOEnum::PointLights, atn_l, 64 + i*pointLightSize);
+    Shader::loadUBO(ShaderListUBOEnum::PointLights, atn_q, 68 + i*pointLightSize);
+  }
+  Shader::loadUBO(ShaderListUBOEnum::PointLights, (GLint)(pointLightsList.size()), 10*pointLightSize);
 }
 
 void PlayerView::clbkKey(GLFWwindow* window, int key, int scancode, int action, int mode) {

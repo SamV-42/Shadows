@@ -10,12 +10,13 @@
 #include <cctype>
 #include <utility>
 #include <cstddef>
+#include <type_traits>
 
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
 
-#define SHADERLIST_UBO Matrices, FragmentData, pointLights
+#define SHADERLIST_UBO Matrices, FragmentData, PointLights
 enum ShaderListUBOEnum { SHADERLIST_UBO };
 
 #define SHADERLIST material0, model, view, projection, transform
@@ -32,8 +33,13 @@ public:
 
 	static void initUBOBuffers();	//called in PlayerView.initBufferData
 	static void initUBO(ShaderListUBOEnum ubo, std::size_t size);
-	template <typename T>
-	static void loadUBO(ShaderListUBOEnum ubo, const T & value, size_t offset = 0);
+	template <typename T> static void loadUBO(ShaderListUBOEnum ubo, const T & value, size_t offset);
+
+
+	//static void loadUBO(ShaderListUBOEnum ubo, const GLint & value, size_t offset);
+	//static void loadUBO(ShaderListUBOEnum ubo, const GLfloat & value, size_t offset);
+
+
 	//defined at the bottom of this header, because templates are apparently dumb
 
 	Shader(std::string vertex_path, std::string fragment_path);
@@ -110,9 +116,20 @@ private:
 
 template <typename T>
 void Shader::loadUBO(ShaderListUBOEnum ubo, const T & value, std::size_t offset) {
+	std::cout << "T: " << sizeof(T) << std::endl;
 	glBindBuffer(GL_UNIFORM_BUFFER, sUBOLocations[ubo]);
 	glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(T), glm::value_ptr(value));
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
+
+template <> void Shader::loadUBO<GLint>(ShaderListUBOEnum ubo, const GLint & value, size_t offset);
+template <> void Shader::loadUBO<GLfloat>(ShaderListUBOEnum ubo, const GLfloat & value, size_t offset);
+
+/*template <>
+void Shader::loadUBO<float>(ShaderListUBOEnum ubo, const float & value, std::size_t offset) {
+	glBindBuffer(GL_UNIFORM_BUFFER, sUBOLocations[ubo]);
+	glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(float), &value);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}*/
 
 #endif
