@@ -29,7 +29,7 @@ void Simulation::initialize() {
 
 void Simulation::update() {
 
-  const double sensitivity = 5.0f;
+  const double sensitivity = 2.5f;
 
   static double pitch = 0;
   static double yaw = 0;
@@ -53,11 +53,11 @@ void Simulation::update() {
   if(mInput1.percentForward || mInput1.percentStrafe) {
     direction = glm::normalize(direction);
   }
-  direction *= 10.0f * Architecture::getInstance().getDt();
+  direction *= 4.0f * Architecture::getInstance().getDt();
   glm::vec3 cameraPos = PlayerView::getInstance() .camera->getCameraPos();
   cameraPos += direction;
 
-  AABB playerAABB(cameraPos.x, cameraPos.y, cameraPos.z, 0.35f, 1.0f, 0.12f);
+  AABB playerAABB(cameraPos.x, cameraPos.y, cameraPos.z, 0.35f, 5.0f, 0.35f);
 
   if(mOctree->checkCollision(playerAABB) != nullptr) {
     cameraPos -= direction;

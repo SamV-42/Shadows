@@ -20,8 +20,8 @@
 #include "Architecture.h"
 #include "Display/ModelWrapper.h"
 
-const GLuint WIDTH = 400;
-const GLuint HEIGHT = 300;
+const GLuint WIDTH = 1200;
+const GLuint HEIGHT = 800;
 
 
 void PlayerView::initialize() {
@@ -209,10 +209,10 @@ void PlayerView::initBufferData() {
 
   const int maxPointLights = 10;
   std::vector<glm::vec3> pointLightsList {  //new vector declaration in C++11
+    glm::vec3(  4, 0, -6  ),
+    glm::vec3(  0, 8, 2  ),
   		glm::vec3(  5, 0, 7  ),
-  		glm::vec3(  2, 0, 3  ),
-  		glm::vec3(  4, 0, -6  ),
-  		glm::vec3(  0, 0, 8  )
+  		glm::vec3(  2, 0, 3  )
   	};
 
   //Note: All the below offsets are predicted by std140. And verified by me after much frustration.

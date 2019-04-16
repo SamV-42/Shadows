@@ -7,7 +7,7 @@
 
 BaseCamera::BaseCamera(glm::vec3 _cameraPos, glm::vec3 _cameraFront, glm::vec3 _cameraUp, GLuint kWidth, GLuint kHeight) {
 	mCameraPos = _cameraPos;
-	mCameraFront = _cameraPos;
+	mCameraFront = _cameraFront;
 	mCameraUp = _cameraUp;
 
 	mProjection = glm::perspective(glm::radians(45.0f), (float)kWidth / (float)kHeight, 0.1f, 100.0f);

@@ -1,3 +1,10 @@
-2 2 1 0.0 1 0 0 0.12 0.12 0.12 0 nano/nanosuit.obj
-10 2 1 0.0 1 0 0 0.12 0.12 0.12 0 nano/nanosuit.obj
--10 2 1 0.0 1 0 0 0.12 0.12 0.12 0 nano/nanosuit.obj
+2 -10 1 180.0 0 1 0 0.12 0.12 0.12 0 nano/nanosuit.obj
+10 -10 1 180.0 0 1 0 0.12 0.12 0.12 0 nano/nanosuit.obj
+-10 -10 1 180.0 0 1 0 0.12 0.12 0.12 0 nano/nanosuit.obj
+5 0 7 0.0 1 0 0 1 1 1 0 Lantern/SA_LD_Medieval_Horn_Lantern.obj
+2 0 3 0.0 1 0 0 1 1 1 0 Lantern/SA_LD_Medieval_Horn_Lantern.obj
+4 0 -6 0.0 1 0 0 1 1 1 0 Lantern/SA_LD_Medieval_Horn_Lantern.obj
+0 8 8 0.0 1 0 0 1 1 1 0 Lantern/SA_LD_Medieval_Horn_Lantern.obj
+5 -800 -200 90 1 0 0 0.01 0.01 0.01 0 letter/C__.obj
+10 -800 -200 90 1 0 0 0.01 0.01 0.01 0 letter/A__.obj
+15 -800 -200 90 1 0 0 0.01 0.01 0.01 0 letter/P.obj
