@@ -19,7 +19,6 @@ int main() {
 }
 
 void Initialize() {
-  //TODO: Is there a way of using templates to define 'singleton classes'?
   //Architecture:  mostly handles a timer at the moment
   //Simulation: handles all physics collisions, etc.
   //PlayerView: all the rendering, also I/O

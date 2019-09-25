@@ -122,7 +122,8 @@ void Shader::loadUBO(ShaderListUBOEnum ubo, const T & value, std::size_t offset)
 	glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(T), glm::value_ptr(value));
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
-
+//needs to be overloaded in Shader.cpp for individual non-matrix types
+//  'cuz I couldn't figure out if there's tempate magic that could distinguish them
 template <> void Shader::loadUBO<GLint>(ShaderListUBOEnum ubo, const GLint & value, size_t offset);
 template <> void Shader::loadUBO<GLfloat>(ShaderListUBOEnum ubo, const GLfloat & value, size_t offset);
 

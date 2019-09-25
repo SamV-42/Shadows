@@ -63,14 +63,16 @@ void PlayerView::respondToEvents() {
 
 //BEACON
 void PlayerView::updateView() {
+  /*--- Send data to the GPU ---*/
   camera->updateView();
   Shader::loadUBO(ShaderListUBOEnum::Matrices, camera->getView(), sizeof(glm::mat4));
 
+  /*--- Draw the models ---*/
   glBindFramebuffer(GL_FRAMEBUFFER, fboMultisample);
-
   glClearColor(0.4f, 0.1f, 0.4f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
@@ -87,7 +89,8 @@ void PlayerView::updateView() {
     }
   }
 
-  mShaders.at(2).use();
+  /*--- Draw the background skymap ---*/
+  mShaders.at(2).use();   //cube_shad
   glDepthFunc(GL_LEQUAL);
   glm::mat4 temp_c_view = glm::mat4(glm::mat3(camera->getView()));
   mShaders.at(2).sendMatrix4fv(ShaderListEnum::modifiedView, temp_c_view);
@@ -98,18 +101,17 @@ void PlayerView::updateView() {
   glBindVertexArray(0);
   glDepthFunc(GL_LESS);
 
-
+  /*--- Rerender to a single texture for aftereffects ---*/
   glBindFramebuffer(GL_READ_FRAMEBUFFER, fboMultisample);
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboIntermediate);
   glBlitFramebuffer(0,0,WIDTH, HEIGHT, 0,0,WIDTH, HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  mShaders.at(1).use();
+  mShaders.at(1).use(); //2ndRendering.vs/.fs
 
   glClearColor(0.5f, 0.2f, 0.2f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
   glDisable(GL_DEPTH_TEST);
-
 
   glActiveTexture(GL_TEXTURE0);
   mShaders.at(1).send1i(ShaderListEnum::texture1, 0);   //not actually needed
@@ -190,7 +192,15 @@ void PlayerView::initLoadModels() {
       firstIndex = modelShaderIndex;
     }
   }
+
   mPlayer = &(mModels.at(firstIndex).at(0));
+
+  auto pointLightsFile = Architecture::getInstance() .readFile("GameData/PointLights.txt");
+  for(auto& line : pointLightsFile) {
+    std::vector<std::string> values = Architecture::getInstance() .splitLine(line);
+
+    mPointLightsList.push_back(glm::vec3(std::stod(values[0]), std::stod(values[1]), std::stod(values[2])));
+  }
 }
 
 void PlayerView::initBufferData() {
@@ -207,19 +217,11 @@ void PlayerView::initBufferData() {
   Shader::loadUBO(ShaderListUBOEnum::Matrices, camera->getProj(), 0);
   Shader::loadUBO(ShaderListUBOEnum::Matrices, camera->getView(), sizeof(glm::mat4));
 
-  const int maxPointLights = 10;
-  std::vector<glm::vec3> pointLightsList {  //new vector declaration in C++11
-    glm::vec3(  4, 0, -6  ),
-    glm::vec3(  0, 8, 2  ),
-  		glm::vec3(  5, 0, 7  ),
-  		glm::vec3(  2, 0, 3  )
-  	};
-
   //Note: All the below offsets are predicted by std140. And verified by me after much frustration.
   std::size_t pointLightSize = 80;
   Shader::initUBO(ShaderListUBOEnum::PointLights, 850 );  //little extra in case
-  for(int i = 0; i < pointLightsList.size(); ++i) {
-    Shader::loadUBO(ShaderListUBOEnum::PointLights, pointLightsList[i], i*pointLightSize);
+  for(int i = 0; i < mPointLightsList.size(); ++i) {
+    Shader::loadUBO(ShaderListUBOEnum::PointLights, mPointLightsList[i], i*pointLightSize);
 
     glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     glm::vec3 lightAmbient = lightColor * glm::vec3(0.05f);
@@ -238,7 +240,7 @@ void PlayerView::initBufferData() {
     Shader::loadUBO(ShaderListUBOEnum::PointLights, atn_l, 64 + i*pointLightSize);
     Shader::loadUBO(ShaderListUBOEnum::PointLights, atn_q, 68 + i*pointLightSize);
   }
-  Shader::loadUBO(ShaderListUBOEnum::PointLights, (GLint)(pointLightsList.size()), 10*pointLightSize);
+  Shader::loadUBO(ShaderListUBOEnum::PointLights, (GLint)(mPointLightsList.size()), 10*pointLightSize);
 }
 
 void PlayerView::initFramebuffers() {

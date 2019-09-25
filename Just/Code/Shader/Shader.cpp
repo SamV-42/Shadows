@@ -148,7 +148,7 @@ void Shader::loadUniformLocations() {
 
 void Shader::initUBOBuffers() {	//static
 	for(int i = 0; i < sUBOLocations.capacity(); ++i) {	//don't fail me now, default enum ordering!
-		glGenBuffers(1, &sUBOLocations[i]);
+		glGenBuffers(1, &sUBOLocations[i]);								//  (enum ordering is part of the standard)
 		glBindBufferBase(GL_UNIFORM_BUFFER, i, sUBOLocations[i]);
 	}
 }

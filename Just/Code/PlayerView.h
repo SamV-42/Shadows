@@ -76,6 +76,8 @@ private:
   std::vector<Shader> mShaders;
   std::vector<GLuint> mUniformBuffers;
   std::vector<std::vector<ModelWrapper> > mModels;  //draw models with the same shader together
+  const int maxPointLights = 10;
+  std::vector<glm::vec3> mPointLightsList;
 
   GLuint fboMultisample, fboIntermediate;
   GLuint outputTexture;

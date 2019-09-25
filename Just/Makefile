@@ -1,4 +1,4 @@
-TP = /home/sam/Programming/Shadows/Just
+TP = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 SF = $(TP)/Code
 OF = $(TP)/Build
 
