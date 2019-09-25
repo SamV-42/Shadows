@@ -1,8 +1,0 @@
-AABBList:
-center_x center_y center_z halfWidth_x halfWidth_y halfWidth_z
-
-ModelList:
-trans_x trans_y trans_z rot(degrees) rotaxis_x rotaxis_y rotaxis_z scale_x scale_y scale_z shaderIndex path
-
-ShaderList:
-vertex_shader fragment_shader (geometry_shader || NO_PATH)

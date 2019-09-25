@@ -1,3 +1,0 @@
-*.o
-final
-#I think this gitignore is extraneous for now, but eventually we'll move away from the enclosing folder and move to just Just 
