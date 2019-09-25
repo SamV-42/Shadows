@@ -1,0 +1,3 @@
+PrimaryModelShader.vs PrimaryModelShader.fs NO_PATH
+2ndRendering.vs 2ndRendering.fs NO_PATH
+cubeshad.vs cubeshad.fs NO_PATH
